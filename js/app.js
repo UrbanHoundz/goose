@@ -26,9 +26,9 @@ const App = (() => {
             // Check auth state and route accordingly
             const isDemoMode = !CONFIG.SUPABASE_URL || CONFIG.SUPABASE_URL.includes('YOUR_PROJECT_REF');
             if (isDemoMode) {
-                // No Supabase configured — skip login and payment, go straight to course
                 Store.set('enrolled', 'true');
                 _showCourseHome();
+                setTimeout(_showNeedsAssessment, 600);
             } else {
                 const user = await Auth.getUser();
                 if (user) {
@@ -65,6 +65,7 @@ const App = (() => {
             _showPaymentWall();
         } else {
             _showCourseHome();
+            setTimeout(_showNeedsAssessment, 600);
         }
     }
 
@@ -362,6 +363,7 @@ const App = (() => {
         <div class="ov-stat">⏱ ${mod.estimatedTime}</div>
         <div class="ov-stat">✅ ${modDone}/${mod.lessons.length} completed</div>
       </div>
+      ${_renderLearningOutcomes(mod.id)}
     </div>
   </div>
   <div class="lessons-list">
@@ -580,11 +582,27 @@ const App = (() => {
 </div>`;
         }
 
-        // Prompt library & worksheets
+        // Resources & Info
         nav.innerHTML += `
 <div class="nav-divider"></div>
 <div class="nav-assessment-btn nav-resource-btn" onclick="App.showPromptLibrary()" role="button">
   <span>💬</span><span>Prompt Library</span>
+</div>
+<div class="nav-assessment-btn nav-resource-btn" onclick="App.showFeedback()" role="button">
+  <span>⭐</span><span>Leave Feedback</span>
+</div>
+<div class="nav-divider"></div>
+<div class="nav-assessment-btn nav-info-btn" onclick="App.showAbout()" role="button">
+  <span>🎓</span><span>About / CPD Info</span>
+</div>
+<div class="nav-assessment-btn nav-info-btn" onclick="App.showPolicy('accessibility')" role="button">
+  <span>♿</span><span>Accessibility</span>
+</div>
+<div class="nav-assessment-btn nav-info-btn" onclick="App.showPolicy('complaints')" role="button">
+  <span>📋</span><span>Complaints Procedure</span>
+</div>
+<div class="nav-assessment-btn nav-info-btn" onclick="App.showPolicy('privacy')" role="button">
+  <span>🔒</span><span>Privacy Policy</span>
 </div>`;
     }
 
@@ -784,6 +802,168 @@ h1{font-size:22px;margin-bottom:6px;color:#1B6B8A}p.sub{color:#7BA3B5;margin-bot
         return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
+    // ── Learning Outcomes ─────────────────────────────────────
+    function _renderLearningOutcomes(modId) {
+        const lo = MODULE_LEARNING_OUTCOMES[modId];
+        if (!lo) return '';
+        return `
+<div class="learning-outcomes">
+  <h3 class="lo-title">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Learning Outcomes
+  </h3>
+  <p class="lo-intro">${lo.intro}</p>
+  <ol class="lo-list">
+    ${lo.outcomes.map(o => `<li>${o}</li>`).join('')}
+  </ol>
+</div>`;
+    }
+
+    // ── About / CPD Info ──────────────────────────────────────
+    function showAbout() {
+        _showView('about');
+        _setBreadcrumb('About & CPD Information');
+        Voice.stop();
+        const container = document.getElementById('view-about');
+        if (!container) return;
+        container.innerHTML = `<div class="policy-page">${POLICY_TEXT.about}</div>`;
+    }
+
+    // ── Policy Pages ──────────────────────────────────────────
+    function showPolicy(key) {
+        const labels = { privacy: 'Privacy Policy', accessibility: 'Accessibility Statement', complaints: 'Complaints Procedure' };
+        _showView('policy');
+        _setBreadcrumb(labels[key] || 'Policy');
+        Voice.stop();
+        const container = document.getElementById('view-policy');
+        if (!container) return;
+        container.innerHTML = `<div class="policy-page">${POLICY_TEXT[key] || '<p>Policy not found.</p>'}</div>`;
+    }
+
+    // ── Learner Feedback ──────────────────────────────────────
+    function showFeedback() {
+        _showView('feedback');
+        _setBreadcrumb('Course Feedback');
+        Voice.stop();
+        const container = document.getElementById('view-feedback');
+        if (!container) return;
+        const saved = Store.get('feedback_submitted');
+        if (saved) {
+            container.innerHTML = `
+<div class="feedback-page">
+  <div class="feedback-thankyou">
+    <div class="feedback-ty-icon">⭐</div>
+    <h2>Thank you for your feedback!</h2>
+    <p>Your responses help us improve the course for future learners.</p>
+    <button class="btn-outline" onclick="App._resetFeedback()">Submit New Feedback</button>
+  </div>
+</div>`;
+            return;
+        }
+        container.innerHTML = `
+<div class="feedback-page">
+  <div class="feedback-header">
+    <h1 class="feedback-title">⭐ Course Feedback</h1>
+    <p class="feedback-desc">Your feedback helps us maintain the quality of this programme and is used in our annual CPD review. It takes less than 2 minutes.</p>
+  </div>
+  <form class="feedback-form" onsubmit="App._submitFeedback(event)">
+    <div class="feedback-q">
+      <label>Overall, how would you rate this course?</label>
+      <div class="star-rating" id="star-rating">
+        ${[5,4,3,2,1].map(n=>`<label class="star-label"><input type="radio" name="rating" value="${n}" required><span>${'★'.repeat(n)}</span></label>`).join('')}
+      </div>
+    </div>
+    <div class="feedback-q">
+      <label>How relevant was the content to your business needs?</label>
+      <div class="feedback-scale">
+        ${['Not at all relevant','Slightly relevant','Quite relevant','Very relevant','Extremely relevant'].map((l,i)=>`
+        <label class="scale-opt"><input type="radio" name="relevance" value="${i+1}" required><span>${l}</span></label>`).join('')}
+      </div>
+    </div>
+    <div class="feedback-q">
+      <label>How likely are you to recommend this course to a colleague?</label>
+      <div class="feedback-scale feedback-scale-row">
+        ${[1,2,3,4,5,6,7,8,9,10].map(n=>`
+        <label class="scale-num"><input type="radio" name="nps" value="${n}" required><span>${n}</span></label>`).join('')}
+      </div>
+      <div class="scale-endpoints"><span>Not at all likely</span><span>Extremely likely</span></div>
+    </div>
+    <div class="feedback-q">
+      <label>Which module did you find most valuable and why?</label>
+      <textarea name="best_module" class="worksheet-textarea" rows="2" placeholder="e.g. Module 3 — AI Marketing, because it gave me immediately actionable content ideas..."></textarea>
+    </div>
+    <div class="feedback-q">
+      <label>What could we improve or add to make this course even better?</label>
+      <textarea name="improvements" class="worksheet-textarea" rows="3" placeholder="Any content gaps, pace issues, technical problems, or suggestions..."></textarea>
+    </div>
+    <div class="feedback-q">
+      <label>Would you like to share a testimonial we can use on our website? (optional)</label>
+      <textarea name="testimonial" class="worksheet-textarea" rows="2" placeholder="Your name and a sentence about your experience (leave blank to skip)..."></textarea>
+    </div>
+    <button type="submit" class="btn-primary feedback-submit-btn">Submit Feedback</button>
+  </form>
+</div>`;
+    }
+
+    function _submitFeedback(e) {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const data = {};
+        fd.forEach((v, k) => { data[k] = v; });
+        data.submitted_at = new Date().toISOString();
+        data.progress = Store.countCompleted() + ' lessons completed';
+        Store.set('feedback_submitted', 'true');
+        Store.set('feedback_data', JSON.stringify(data));
+        showFeedback(); // re-render thank-you state
+        toast('Thank you! Your feedback has been recorded.', 'success');
+    }
+
+    function _resetFeedback() {
+        Store.set('feedback_submitted', '');
+        showFeedback();
+    }
+
+    // ── Pre-Course Needs Assessment ───────────────────────────
+    function _showNeedsAssessment() {
+        if (Store.get('needs_assessment_done')) return;
+        const modal = document.createElement('div');
+        modal.id        = 'needs-modal';
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+<div class="modal-box needs-modal-box" role="dialog" aria-modal="true">
+  <div class="needs-modal-header">
+    <img src="img/penshaw-view-logo.svg" alt="Penshaw View Training" class="modal-logo-img" style="width:160px">
+    <h2>Welcome to the AI For Business Growth Masterclass</h2>
+    <p class="modal-sub">Before you begin, please answer 4 quick questions to help us understand your starting point. This takes under a minute.</p>
+  </div>
+  <form class="needs-form" onsubmit="App._submitNeedsAssessment(event)">
+    ${PRE_ASSESSMENT_QUESTIONS.map(q => `
+    <div class="needs-q">
+      <label class="needs-label">${q.question}</label>
+      ${q.type === 'radio' ? `
+      <div class="needs-options">
+        ${q.options.map(o => `<label class="needs-opt"><input type="radio" name="${q.id}" value="${o}" ${q.id !== 'challenge' ? 'required' : ''}><span>${o}</span></label>`).join('')}
+      </div>` : `
+      <textarea name="${q.id}" class="worksheet-textarea" rows="2" placeholder="${q.placeholder}"></textarea>`}
+    </div>`).join('')}
+    <button type="submit" class="btn-primary needs-submit-btn">Start Course →</button>
+  </form>
+</div>`;
+        document.body.appendChild(modal);
+        setTimeout(() => modal.classList.add('visible'), 10);
+    }
+
+    function _submitNeedsAssessment(e) {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const data = {};
+        fd.forEach((v, k) => { data[k] = v; });
+        Store.set('needs_assessment_done', 'true');
+        Store.set('needs_assessment_data', JSON.stringify(data));
+        const m = document.getElementById('needs-modal');
+        if (m) { m.classList.remove('visible'); setTimeout(() => m.remove(), 300); }
+    }
+
     // ── Prompt Library ────────────────────────────────────────
     function showPromptLibrary() {
         _showView('prompts');
@@ -885,7 +1065,7 @@ h1{font-size:22px;margin-bottom:6px;color:#1B6B8A}p.sub{color:#7BA3B5;margin-bot
 
     // ── View Management ───────────────────────────────────────
     function _showView(name) {
-        ['home','module','lesson','assessment','certificate','prompts'].forEach(v => {
+        ['home','module','lesson','assessment','certificate','prompts','about','policy','feedback'].forEach(v => {
             const el = document.getElementById(`view-${v}`);
             if (!el) return;
             if (v === name) {
@@ -932,10 +1112,11 @@ h1{font-size:22px;margin-bottom:6px;color:#1B6B8A}p.sub{color:#7BA3B5;margin-bot
 
     return {
         init, showHome, showModule, showLesson, startAssessment, showCertificate,
-        showPromptLibrary, startPayment, toast,
+        showPromptLibrary, showAbout, showPolicy, showFeedback, startPayment, toast,
         _switchTab, _handleLogin, _handleRegister, _handleForgot, _demoAccess,
         _toggleSidebarModule, _onAssessmentComplete,
         _saveWorksheet, _printWorksheet, _copyPrompt, _filterPrompts, _downloadPrompts,
+        _submitFeedback, _resetFeedback, _submitNeedsAssessment,
     };
 
 })();

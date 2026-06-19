@@ -175,6 +175,13 @@ const Cert = (() => {
         ctx.fillStyle = 'rgba(255,255,255,0.65)';
         ctx.fillText('demonstrating proficiency in AI tools, strategy, marketing, automation, and lead generation', W/2, 498);
 
+        // CPD Hours badge
+        ctx.font      = 'bold 13px -apple-system, Segoe UI, sans-serif';
+        ctx.fillStyle = 'rgba(0,212,232,0.9)';
+        ctx.letterSpacing = '0.08em';
+        ctx.fillText('3.5 CPD HOURS · STRUCTURED LEARNING · FOUNDATION / INTERMEDIATE', W/2, 532);
+        ctx.letterSpacing = '0';
+
         // Bottom info row
         const bottomY = 600;
         // Date
