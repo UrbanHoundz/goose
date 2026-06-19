@@ -24,11 +24,18 @@ const App = (() => {
             _bindGlobalControls();
 
             // Check auth state and route accordingly
-            const user = await Auth.getUser();
-            if (user) {
-                _onLoggedIn(user);
+            const isDemoMode = !CONFIG.SUPABASE_URL || CONFIG.SUPABASE_URL.includes('YOUR_PROJECT_REF');
+            if (isDemoMode) {
+                // No Supabase configured — skip login and payment, go straight to course
+                Store.set('enrolled', 'true');
+                _showCourseHome();
             } else {
-                _showAuthModal();
+                const user = await Auth.getUser();
+                if (user) {
+                    _onLoggedIn(user);
+                } else {
+                    _showAuthModal();
+                }
             }
 
             // Hide loading, show app
