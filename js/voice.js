@@ -18,7 +18,26 @@ const Voice = (() => {
                !CONFIG.ELEVENLABS_API_KEY.includes('YOUR_ELEVEN');
     }
 
-    function setScript(text) { stop(); _script = text || ''; }
+    // Strip HTML tags and tidy whitespace so TTS gets clean text
+    function _cleanText(raw) {
+        if (!raw) return '';
+        return raw
+            .replace(/<br\s*\/?>/gi, '. ')
+            .replace(/<\/p>/gi, '. ')
+            .replace(/<\/li>/gi, '. ')
+            .replace(/<\/h[1-6]>/gi, '. ')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/\s{2,}/g, ' ')
+            .replace(/\.\s*\./g, '.')
+            .trim();
+    }
+
+    function setScript(text) { stop(); _script = _cleanText(text); }
 
     async function play() {
         if (!_script) return;
@@ -42,19 +61,21 @@ const Voice = (() => {
         try {
             const voiceId = CONFIG.ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB';
             const res = await fetch(
-                `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
+                `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
                 method: 'POST',
                 headers: {
                     'xi-api-key':   CONFIG.ELEVENLABS_API_KEY,
                     'Content-Type': 'application/json',
+                    'Accept':       'audio/mpeg',
                 },
                 body: JSON.stringify({
                     text: _script,
-                    model_id: 'eleven_monolingual_v1',
+                    // eleven_turbo_v2_5 sounds far more natural than v1
+                    model_id: 'eleven_turbo_v2_5',
                     voice_settings: {
-                        stability: 0.72,
-                        similarity_boost: 0.80,
-                        style: 0.45,
+                        stability:        0.38,  // lower = more expressive natural variation
+                        similarity_boost: 0.78,
+                        style:            0.60,  // higher = more emotive delivery
                         use_speaker_boost: true
                     }
                 })
@@ -81,34 +102,76 @@ const Voice = (() => {
         }
     }
 
+    // Pick the best available voice — neural/enhanced voices sound far more human
+    function _pickVoice() {
+        const voices = window.speechSynthesis.getVoices();
+        if (!voices.length) return null;
+
+        // Priority list — most natural sounding first
+        const priority = [
+            // macOS enhanced (require macOS 14+, downloaded)
+            v => v.name === 'Ava (Enhanced)',
+            v => v.name === 'Zoe (Enhanced)',
+            v => v.name === 'Aaron (Enhanced)',
+            // macOS standard neural
+            v => v.name === 'Daniel' && v.lang.startsWith('en'),
+            v => v.name === 'Rishi'  && v.lang.startsWith('en'),
+            v => v.name === 'Moira'  && v.lang.startsWith('en'),
+            // Chrome high-quality voices
+            v => v.name === 'Google UK English Male',
+            v => v.name === 'Google UK English Female',
+            v => v.name === 'Google US English',
+            // Windows neural (Edge / Windows 11)
+            v => v.name.includes('Microsoft Ryan'),
+            v => v.name.includes('Microsoft Guy'),
+            v => v.name.includes('Microsoft Aria'),
+            v => v.name.includes('Microsoft George'),
+            v => v.name.includes('Microsoft Zira'),
+            // Fallback to any English-GB then English
+            v => v.lang === 'en-GB',
+            v => v.lang.startsWith('en'),
+        ];
+
+        for (const test of priority) {
+            const found = voices.find(test);
+            if (found) return found;
+        }
+        return null;
+    }
+
     function _playSpeechSynthesis() {
         if (!supported) { _updateUI('error'); return; }
         stop();
-        _utterance          = new SpeechSynthesisUtterance(_script);
-        _utterance.rate     = _rate * 0.92;
-        _utterance.pitch    = 0.82;
-        _utterance.lang     = 'en-GB';
 
-        const voices    = window.speechSynthesis.getVoices();
-        const preferred = voices.find(v =>
-            (v.name.includes('Daniel') || v.name.includes('Arthur') ||
-             v.name.includes('Google UK') || v.name.includes('Microsoft George') ||
-             v.name.includes('Reed')) && v.lang.startsWith('en')
-        ) || voices.find(v => v.lang.startsWith('en-GB'))
-          || voices.find(v => v.lang.startsWith('en'));
-        if (preferred) _utterance.voice = preferred;
+        const doSpeak = () => {
+            _utterance       = new SpeechSynthesisUtterance(_script);
+            _utterance.rate  = _rate * 0.90;  // 90% — natural pacing, not rushed
+            _utterance.pitch = 1.0;            // default pitch sounds most human
+            _utterance.lang  = 'en-GB';
 
-        _utterance.onstart  = () => {
-            _playing = true; _paused = false;
-            _estimatedDuration = (_script.length / 14) * (1 / _rate) * 1000;
-            _startTime = Date.now();
-            _startProgressTimer();
-            _updateUI('playing');
+            const voice = _pickVoice();
+            if (voice) _utterance.voice = voice;
+
+            _utterance.onstart = () => {
+                _playing = true; _paused = false;
+                _estimatedDuration = (_script.length / 13) * (1 / _rate) * 1000;
+                _startTime = Date.now();
+                _startProgressTimer();
+                _updateUI('playing');
+            };
+            _utterance.onend   = _done;
+            _utterance.onerror = () => { _stopProgressTimer(); _updateUI('error'); };
+            _utterance.onpause = () => { _paused = true; _playing = false; _stopProgressTimer(); _updateUI('paused'); };
+            window.speechSynthesis.speak(_utterance);
         };
-        _utterance.onend    = _done;
-        _utterance.onerror  = () => { _stopProgressTimer(); _updateUI('error'); };
-        _utterance.onpause  = () => { _paused = true; _playing = false; _stopProgressTimer(); _updateUI('paused'); };
-        window.speechSynthesis.speak(_utterance);
+
+        // Voices may not be ready on first call — wait if needed
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length) {
+            doSpeak();
+        } else {
+            window.speechSynthesis.addEventListener('voiceschanged', doSpeak, { once: true });
+        }
     }
 
     function _done() {
@@ -131,8 +194,8 @@ const Voice = (() => {
     }
 
     function stop() {
-        if (_audio)   { _audio.pause(); _audio = null; }
-        if (supported) window.speechSynthesis.cancel();
+        if (_audio)    { _audio.pause(); _audio = null; }
+        if (supported)  window.speechSynthesis.cancel();
         _playing = false; _paused = false;
         _stopProgressTimer(); _setProgress(0); _updateUI('ready');
     }
@@ -146,7 +209,7 @@ const Voice = (() => {
     }
 
     function isPlaying() { return _playing; }
-    function isPaused()  { return _paused; }
+    function isPaused()  { return _paused;  }
 
     function _startProgressTimer() {
         _stopProgressTimer();
@@ -171,24 +234,24 @@ const Voice = (() => {
     }
 
     function _updateUI(state) {
-        const playBtn  = document.getElementById('voice-play');
-        const pauseBtn = document.getElementById('voice-pause');
+        const playBtn   = document.getElementById('voice-play');
+        const pauseBtn  = document.getElementById('voice-pause');
         const statusTxt = document.getElementById('voice-status');
-        const waveform = document.getElementById('voice-waveform');
-        const panel    = document.getElementById('voice-panel');
+        const waveform  = document.getElementById('voice-waveform');
+        const panel     = document.getElementById('voice-panel');
         if (!playBtn) return;
 
-        const aiLabel   = _useElevenLabs() ? 'AI Voice' : 'Voice';
-        const readyMsg  = _useElevenLabs() ? '🤖 AI Voice ready — click Play' : 'Click Play to start narration';
-        const playMsg   = _useElevenLabs() ? '🎙 AI Voice speaking...' : 'Playing narration...';
+        const aiLabel  = _useElevenLabs() ? 'AI Voice' : 'Voice';
+        const readyMsg = _useElevenLabs() ? '🎙 AI Voice ready — click Play' : 'Click Play to start narration';
+        const playMsg  = _useElevenLabs() ? '🎙 AI Voice speaking...' : 'Playing narration...';
 
         const states = {
             loading: { play: false, pause: false, status: `Generating ${aiLabel}...`, wave: false, panelClass: 'loading' },
-            playing: { play: false, pause: true,  status: playMsg,   wave: true,  panelClass: 'playing' },
-            paused:  { play: true,  pause: false, status: 'Paused',               wave: false, panelClass: '' },
-            done:    { play: true,  pause: false, status: 'Complete ✓',            wave: false, panelClass: '' },
-            error:   { play: true,  pause: false, status: 'Voice unavailable',     wave: false, panelClass: '' },
-            ready:   { play: true,  pause: false, status: readyMsg,               wave: false, panelClass: '' },
+            playing: { play: false, pause: true,  status: playMsg,       wave: true,  panelClass: 'playing' },
+            paused:  { play: true,  pause: false, status: 'Paused',      wave: false, panelClass: '' },
+            done:    { play: true,  pause: false, status: 'Complete ✓',  wave: false, panelClass: '' },
+            error:   { play: true,  pause: false, status: 'Voice unavailable — check your ElevenLabs key or use Chrome', wave: false, panelClass: '' },
+            ready:   { play: true,  pause: false, status: readyMsg,      wave: false, panelClass: '' },
         };
         const cfg = states[state] || states.ready;
 
