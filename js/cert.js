@@ -68,134 +68,162 @@ const Cert = (() => {
         canvas.height = H;
         const ctx = canvas.getContext('2d');
 
-        // Background gradient
+        // Background gradient — Penshaw View dark navy to teal
         const grad = ctx.createLinearGradient(0, 0, W, H);
-        grad.addColorStop(0,   '#1E1B4B');
-        grad.addColorStop(0.5, '#312E81');
-        grad.addColorStop(1,   '#1E3A5F');
+        grad.addColorStop(0,   '#0A1E2D');
+        grad.addColorStop(0.5, '#1B6B8A');
+        grad.addColorStop(1,   '#0A2535');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, W, H);
 
         // Outer border
-        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.strokeStyle = 'rgba(0,212,232,0.5)';
         ctx.lineWidth   = 3;
         ctx.strokeRect(20, 20, W-40, H-40);
 
         // Inner border
-        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.strokeStyle = 'rgba(0,212,232,0.18)';
         ctx.lineWidth   = 1;
         ctx.strokeRect(35, 35, W-70, H-70);
 
         // Decorative corner stars
         ['25,25','1175,25','25,825','1175,825'].forEach(pos => {
             const [cx,cy] = pos.split(',').map(Number);
-            _star(ctx, cx, cy, 12, 6, 'rgba(255,255,255,0.3)');
+            _star(ctx, cx, cy, 12, 6, 'rgba(0,212,232,0.4)');
         });
 
-        // Gold accent top line
+        // Cyan accent top line
         const gold = ctx.createLinearGradient(100, 0, W-100, 0);
         gold.addColorStop(0,   'transparent');
-        gold.addColorStop(0.3, '#F59E0B');
-        gold.addColorStop(0.7, '#FCD34D');
+        gold.addColorStop(0.3, '#00D4E8');
+        gold.addColorStop(0.7, '#1B6B8A');
         gold.addColorStop(1,   'transparent');
         ctx.fillStyle = gold;
         ctx.fillRect(100, 90, W-200, 3);
         ctx.fillRect(100, H-90, W-200, 3);
 
-        // Robot emoji
-        ctx.font = '64px serif';
+        // Penshaw View dot grid (3×3) — top centre
+        const dotColors = ['#1B6B8A','#1B6B8A','#00D4E8','#1B6B8A','#1B6B8A','#00D4E8','#00D4E8','#00D4E8','#00D4E8'];
+        const dotSize = 9, dotGap = 22, gridStartX = W/2 - 25, gridStartY = 62;
+        for (let r = 0; r < 3; r++) {
+            for (let c = 0; c < 3; c++) {
+                ctx.beginPath();
+                ctx.arc(gridStartX + c*dotGap, gridStartY + r*dotGap, dotSize/2, 0, Math.PI*2);
+                ctx.fillStyle = dotColors[r*3+c];
+                ctx.fill();
+            }
+        }
+
+        // "PV" initials with gradient
+        const pvGrad = ctx.createLinearGradient(W/2 - 30, 0, W/2 + 60, 0);
+        pvGrad.addColorStop(0, '#1B6B8A');
+        pvGrad.addColorStop(1, '#00D4E8');
+        ctx.font = 'bold 42px -apple-system, Segoe UI, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('🤖', W/2, 155);
+        ctx.fillStyle = pvGrad;
+        ctx.fillText('PV', W/2 + 48, 116);
 
         // "Certificate of Completion"
         ctx.font      = 'bold 20px -apple-system, Segoe UI, sans-serif';
-        ctx.fillStyle = '#A5B4FC';
+        ctx.fillStyle = '#00D4E8';
         ctx.letterSpacing = '0.2em';
-        ctx.fillText('CERTIFICATE OF COMPLETION', W/2, 205);
+        ctx.fillText('CERTIFICATE OF COMPLETION', W/2, 160);
 
         // Course name
         ctx.font      = 'bold 38px -apple-system, Segoe UI, sans-serif';
         ctx.fillStyle = '#FFFFFF';
         ctx.letterSpacing = '0';
-        ctx.fillText('AI For Business Growth Masterclass', W/2, 258);
+        ctx.fillText('AI For Business Growth Masterclass', W/2, 210);
 
         // Divider
-        ctx.fillStyle = 'rgba(255,255,255,0.2)';
-        ctx.fillRect(W/2 - 200, 278, 400, 1);
+        ctx.fillStyle = 'rgba(0,212,232,0.3)';
+        ctx.fillRect(W/2 - 200, 230, 400, 1);
 
         // "This certifies that"
         ctx.font      = 'italic 18px Georgia, serif';
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.fillText('This is to certify that', W/2, 330);
+        ctx.fillText('This is to certify that', W/2, 280);
 
-        // Student name
+        // Student name — cyan gradient
         ctx.font      = 'bold 52px Georgia, serif';
         const nameGrad = ctx.createLinearGradient(0, 0, W, 0);
-        nameGrad.addColorStop(0.3, '#FCD34D');
-        nameGrad.addColorStop(0.7, '#F59E0B');
+        nameGrad.addColorStop(0.3, '#00D4E8');
+        nameGrad.addColorStop(0.7, '#1B6B8A');
         ctx.fillStyle = nameGrad;
-        ctx.fillText(name, W/2, 400);
+        ctx.fillText(name, W/2, 350);
 
         // Underline name
         const nameW = ctx.measureText(name).width;
-        ctx.fillStyle = 'rgba(245,158,11,0.4)';
-        ctx.fillRect(W/2 - nameW/2 - 10, 412, nameW + 20, 2);
+        ctx.fillStyle = 'rgba(0,212,232,0.4)';
+        ctx.fillRect(W/2 - nameW/2 - 10, 362, nameW + 20, 2);
 
         // "has successfully completed"
         ctx.font      = 'italic 18px Georgia, serif';
         ctx.fillStyle = 'rgba(255,255,255,0.7)';
-        ctx.fillText('has successfully completed the 3-hour professional programme with a score of', W/2, 455);
+        ctx.fillText('has successfully completed the 3-hour professional programme with a score of', W/2, 405);
 
-        // Score badge
-        const bx = W/2 - 60, by = 472;
-        ctx.fillStyle = '#10B981';
+        // Score badge — teal
+        const bx = W/2 - 60, by = 422;
+        ctx.fillStyle = '#00D4E8';
         _roundRect(ctx, bx, by, 120, 44, 22);
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = '#0A1E2D';
         ctx.font      = 'bold 24px -apple-system, Segoe UI, sans-serif';
         ctx.fillText(score + '%', W/2, by + 30);
 
         // Achievement description
         ctx.font      = '16px -apple-system, Segoe UI, sans-serif';
         ctx.fillStyle = 'rgba(255,255,255,0.65)';
-        ctx.fillText('demonstrating proficiency in AI tools, strategy, marketing, automation, and lead generation', W/2, 548);
+        ctx.fillText('demonstrating proficiency in AI tools, strategy, marketing, automation, and lead generation', W/2, 498);
 
         // Bottom info row
-        const bottomY = 660;
+        const bottomY = 600;
         // Date
         ctx.font      = 'bold 14px -apple-system, Segoe UI, sans-serif';
-        ctx.fillStyle = '#A5B4FC';
+        ctx.fillStyle = '#00D4E8';
         ctx.fillText('DATE OF COMPLETION', W/4, bottomY);
         ctx.font      = '18px Georgia, serif';
         ctx.fillStyle = '#FFFFFF';
         ctx.fillText(date, W/4, bottomY + 28);
 
         // Signature line
-        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.strokeStyle = 'rgba(0,212,232,0.4)';
         ctx.lineWidth   = 1;
-        ctx.beginPath(); ctx.moveTo(W/2 - 120, bottomY + 10); ctx.lineTo(W/2 + 120, bottomY + 10); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(W/2 - 140, bottomY + 10); ctx.lineTo(W/2 + 140, bottomY + 10); ctx.stroke();
         ctx.font        = 'italic 20px Georgia, serif';
-        ctx.fillStyle   = '#FCD34D';
-        ctx.fillText('AI Business Masterclass', W/2, bottomY + 6);
-        ctx.font        = 'bold 13px -apple-system, Segoe UI, sans-serif';
-        ctx.fillStyle   = '#A5B4FC';
-        ctx.fillText('COURSE DIRECTOR', W/2, bottomY + 30);
+        ctx.fillStyle   = '#00D4E8';
+        ctx.fillText('Penshaw View Training', W/2, bottomY + 6);
+        ctx.font        = 'bold 12px -apple-system, Segoe UI, sans-serif';
+        ctx.fillStyle   = 'rgba(0,212,232,0.7)';
+        ctx.fillText('AUTHORISED TRAINING PROVIDER', W/2, bottomY + 28);
 
         // Cert ID
         ctx.font      = 'bold 14px -apple-system, Segoe UI, sans-serif';
-        ctx.fillStyle = '#A5B4FC';
+        ctx.fillStyle = '#00D4E8';
         ctx.fillText('CERTIFICATE ID', (W*3)/4, bottomY);
         ctx.font      = '16px monospace';
         ctx.fillStyle = '#FFFFFF';
         ctx.fillText(_certId(name, date), (W*3)/4, bottomY + 28);
 
-        // Bottom gold line
+        // Bottom cyan line
         ctx.fillStyle = gold;
-        ctx.fillRect(100, bottomY + 60, W-200, 2);
+        ctx.fillRect(100, bottomY + 52, W-200, 2);
+
+        // Penshaw View dot row at bottom
+        const bDotY = bottomY + 72;
+        const bDotColors = ['#1B6B8A','#1B6B8A','#00D4E8','#1B6B8A','#1B6B8A','#00D4E8','#00D4E8','#00D4E8','#00D4E8'];
+        for (let c = 0; c < 9; c++) {
+            ctx.beginPath();
+            ctx.arc(W/2 - 80 + c*20, bDotY, 5, 0, Math.PI*2);
+            ctx.fillStyle = bDotColors[c];
+            ctx.globalAlpha = 0.6;
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
 
         // Footer
         ctx.font      = '13px -apple-system, Segoe UI, sans-serif';
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
-        ctx.fillText('AI For Business Growth Masterclass  ·  Professional Development Programme', W/2, bottomY + 100);
+        ctx.fillText('Penshaw View Training  ·  AI For Business Growth Masterclass  ·  Professional Development', W/2, bottomY + 96);
     }
 
     function _roundRect(ctx, x, y, w, h, r) {

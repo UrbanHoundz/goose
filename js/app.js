@@ -79,7 +79,7 @@ const App = (() => {
         modal.innerHTML = `
 <div class="modal-box auth-modal-box" role="dialog" aria-modal="true" aria-label="Sign in or register">
   <div class="modal-header">
-    <div class="modal-logo">🤖</div>
+    <img src="img/penshaw-view-logo.svg" alt="Penshaw View Training" class="modal-logo-img">
     <h2>AI For Business Growth Masterclass</h2>
     <p class="modal-sub">Sign in or create a free account to begin</p>
   </div>
