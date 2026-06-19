@@ -5,9 +5,16 @@ const Auth = (() => {
     let _currentUser = null;
     let _onAuthChange = null;
 
+    function _isConfigured() {
+        return CONFIG.SUPABASE_URL &&
+               !CONFIG.SUPABASE_URL.includes('YOUR_PROJECT_REF') &&
+               CONFIG.SUPABASE_ANON_KEY &&
+               !CONFIG.SUPABASE_ANON_KEY.includes('YOUR_SUPABASE');
+    }
+
     function init() {
-        if (typeof supabase === 'undefined') {
-            console.warn('Supabase SDK not loaded — running in demo mode');
+        if (typeof supabase === 'undefined' || !_isConfigured()) {
+            console.warn('Supabase not configured — running in demo mode');
             return;
         }
         _supabase = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
