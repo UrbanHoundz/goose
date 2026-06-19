@@ -12,13 +12,14 @@ const CONFIG = {
 
     // ── ElevenLabs AI Voice ───────────────────────────────────
     // Sign up free at elevenlabs.io — 10,000 chars/month free
-    // Replace with your API key to enable Jarvis-quality AI voice
+    // Replace with your API key to enable AI voice narration
     ELEVENLABS_API_KEY:  'YOUR_ELEVENLABS_API_KEY',
-    // Voice ID — 'Adam' sounds authoritative and clear:
-    // Adam:  pNInz6obpgDQGcFmaJgB  (recommended — deep, authoritative)
-    // Josh:  TxGEqnHWrfWFTfGW9XjX  (friendly, clear)
+    // British male voices (copy the ID of your preferred voice):
+    // George: JBFqnCBsd6RMkjVDRZzb  (British, warm, authoritative — recommended)
+    // Callum: N2lVS1w4EtoT3dr4eOWO  (British, confident)
+    // Harry:  SOYHLrjzK2X1ezoPC6cr  (British, natural)
     // Thomas: GBv7mTt0atIp3Br8iCZE  (British, calm)
-    ELEVENLABS_VOICE_ID: 'pNInz6obpgDQGcFmaJgB',
+    ELEVENLABS_VOICE_ID: 'JBFqnCBsd6RMkjVDRZzb',
 
     // ── Supabase ──────────────────────────────────────────
     SUPABASE_URL:      'https://YOUR_PROJECT_REF.supabase.co',

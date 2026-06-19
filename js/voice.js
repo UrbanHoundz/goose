@@ -102,33 +102,33 @@ const Voice = (() => {
         }
     }
 
-    // Pick the best available voice — neural/enhanced voices sound far more human
+    // Pick the best available British English voice
     function _pickVoice() {
         const voices = window.speechSynthesis.getVoices();
         if (!voices.length) return null;
 
-        // Priority list — most natural sounding first
+        // Priority: British voices first, then fall back to any English
         const priority = [
-            // macOS enhanced (require macOS 14+, downloaded)
-            v => v.name === 'Ava (Enhanced)',
-            v => v.name === 'Zoe (Enhanced)',
-            v => v.name === 'Aaron (Enhanced)',
-            // macOS standard neural
-            v => v.name === 'Daniel' && v.lang.startsWith('en'),
-            v => v.name === 'Rishi'  && v.lang.startsWith('en'),
-            v => v.name === 'Moira'  && v.lang.startsWith('en'),
-            // Chrome high-quality voices
+            // Chrome — best quality, always British
             v => v.name === 'Google UK English Male',
             v => v.name === 'Google UK English Female',
-            v => v.name === 'Google US English',
-            // Windows neural (Edge / Windows 11)
-            v => v.name.includes('Microsoft Ryan'),
-            v => v.name.includes('Microsoft Guy'),
-            v => v.name.includes('Microsoft Aria'),
-            v => v.name.includes('Microsoft George'),
-            v => v.name.includes('Microsoft Zira'),
-            // Fallback to any English-GB then English
+            // macOS British voices (System Preferences → Accessibility → Spoken Content)
+            v => v.name === 'Daniel'  && v.lang === 'en-GB',
+            v => v.name === 'Arthur'  && v.lang === 'en-GB',
+            v => v.name === 'Malcolm' && v.lang === 'en-GB',
+            v => v.name === 'Kate'    && v.lang === 'en-GB',
+            v => v.name === 'Serena'  && v.lang === 'en-GB',
+            // Windows British (Edge / Windows 10+)
+            v => v.name.includes('Microsoft George') && v.lang === 'en-GB',
+            v => v.name.includes('Microsoft Hazel')  && v.lang === 'en-GB',
+            v => v.name.includes('Microsoft Ryan')   && v.lang === 'en-GB',
+            v => v.name.includes('Microsoft Libby')  && v.lang === 'en-GB',
+            v => v.name.includes('Microsoft Sonia')  && v.lang === 'en-GB',
+            // Any en-GB voice as a safe fallback
             v => v.lang === 'en-GB',
+            v => v.lang === 'en-AU',
+            v => v.lang === 'en-IE',
+            // Last resort — any English at all
             v => v.lang.startsWith('en'),
         ];
 
