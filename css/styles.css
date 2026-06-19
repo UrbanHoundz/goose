@@ -692,21 +692,73 @@ body {
 
 /* Voice panel */
 .voice-panel {
-    background: var(--surface-2); border: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface) 100%);
+    border: 1px solid var(--border);
     border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 20px;
+    position: relative; overflow: hidden;
+    transition: border-color .3s, box-shadow .3s;
 }
+.voice-panel::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(79,70,229,.04) 0%, transparent 60%);
+    pointer-events: none;
+}
+.voice-panel.playing {
+    border-color: rgba(79,70,229,.4);
+    box-shadow: 0 0 0 3px rgba(79,70,229,.08), var(--shadow);
+}
+.voice-panel.loading { border-color: rgba(6,182,212,.4); }
+
 .voice-panel-header {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; gap: 10px;
     margin-bottom: 14px; font-weight: 600; font-size: .9rem; color: var(--text);
 }
-.voice-status-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--text-muted); margin-left: auto;
-    transition: background .3s;
+.voice-panel-title { flex: 1; }
+
+/* Icon ring */
+.voice-icon-ring {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--primary-bg); border: 1.5px solid rgba(79,70,229,.25);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary); flex-shrink: 0;
+    transition: background .3s, border-color .3s, box-shadow .3s;
 }
-.voice-status-dot.playing { background: var(--success); animation: blink 1s infinite; }
-.voice-status-dot.paused { background: var(--warning); }
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+.voice-panel.playing .voice-icon-ring {
+    background: var(--primary); color: #fff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(79,70,229,.15), 0 0 0 8px rgba(79,70,229,.06);
+    animation: ringPulse 2s ease-in-out infinite;
+}
+@keyframes ringPulse {
+    0%, 100% { box-shadow: 0 0 0 4px rgba(79,70,229,.2), 0 0 0 8px rgba(79,70,229,.06); }
+    50%       { box-shadow: 0 0 0 6px rgba(79,70,229,.3), 0 0 0 14px rgba(79,70,229,.08); }
+}
+
+/* Waveform bars */
+.voice-waveform {
+    display: flex; align-items: center; gap: 3px;
+    height: 22px; margin-left: auto;
+}
+.voice-waveform span {
+    display: block; width: 3px; border-radius: 2px;
+    background: var(--primary); opacity: .25;
+    height: 6px;
+    transition: opacity .3s;
+}
+.voice-waveform.active span { opacity: 1; }
+.voice-waveform.active span:nth-child(1) { animation: bar 0.9s ease-in-out infinite 0.00s; }
+.voice-waveform.active span:nth-child(2) { animation: bar 0.9s ease-in-out infinite 0.13s; }
+.voice-waveform.active span:nth-child(3) { animation: bar 0.9s ease-in-out infinite 0.26s; }
+.voice-waveform.active span:nth-child(4) { animation: bar 0.9s ease-in-out infinite 0.39s; }
+.voice-waveform.active span:nth-child(5) { animation: bar 0.9s ease-in-out infinite 0.52s; }
+.voice-waveform.active span:nth-child(6) { animation: bar 0.9s ease-in-out infinite 0.65s; }
+.voice-waveform.active span:nth-child(7) { animation: bar 0.9s ease-in-out infinite 0.78s; }
+@keyframes bar {
+    0%, 100% { height: 4px;  }
+    30%       { height: 18px; }
+    60%       { height: 8px;  }
+}
+
 .voice-btns { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
 .voice-action-btn {
     background: var(--surface); border: 1px solid var(--border);
@@ -714,12 +766,33 @@ body {
     padding: 8px 14px; border-radius: var(--radius-sm);
     font-size: .82rem; font-weight: 600;
     display: inline-flex; align-items: center; gap: 6px;
-    transition: background var(--transition), border-color var(--transition);
+    transition: background var(--transition), border-color var(--transition), transform var(--transition);
 }
-.voice-action-btn:hover:not(:disabled) { background: var(--primary); border-color: var(--primary); color: #fff; }
+.voice-action-btn:hover:not(:disabled) {
+    background: var(--primary); border-color: var(--primary); color: #fff;
+    transform: translateY(-1px);
+}
+.voice-action-btn:active:not(:disabled) { transform: translateY(0); }
 .voice-action-btn:disabled { opacity: .4; cursor: not-allowed; }
-.voice-action-btn#voice-play { background: var(--primary); border-color: var(--primary); color: #fff; }
-.voice-action-btn#voice-play:hover { background: var(--primary-dark); }
+.voice-play-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+    border-color: var(--primary) !important; color: #fff !important;
+    box-shadow: 0 2px 8px rgba(79,70,229,.3);
+    min-width: 80px; justify-content: center;
+}
+.voice-play-btn:hover:not(:disabled) {
+    box-shadow: 0 4px 14px rgba(79,70,229,.45);
+    transform: translateY(-2px) !important;
+}
+
+/* Button spinner */
+.btn-spinner {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    animation: spin .7s linear infinite; display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 .voice-speed-wrap { margin-left: auto; }
 .voice-speed-sel {
     background: var(--surface); border: 1px solid var(--border);
@@ -1228,6 +1301,100 @@ canvas#certificate-canvas {
     .lesson-content-box { box-shadow: none; border: none; padding: 0; }
     .content-area { overflow: visible; }
 }
+
+/* ══════════════════════════════════════════════════
+   ENHANCED ANIMATIONS
+══════════════════════════════════════════════════ */
+
+/* Primary button glow */
+.btn-primary {
+    position: relative; overflow: hidden;
+}
+.btn-primary::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.15) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform .5s;
+}
+.btn-primary:hover::after { transform: translateX(100%); }
+
+/* Module card — lift + glow on hover */
+.module-card {
+    transition:
+        transform .25s cubic-bezier(.34,1.56,.64,1),
+        box-shadow .25s,
+        border-color .25s !important;
+}
+.module-card:hover {
+    transform: translateY(-6px) scale(1.01) !important;
+    box-shadow: 0 16px 40px rgba(79,70,229,.15), var(--shadow) !important;
+}
+
+/* Lesson list item slide */
+.lesson-list-item {
+    transition: transform .2s, border-color .2s, box-shadow .2s !important;
+}
+.lesson-list-item:hover {
+    transform: translateX(4px) !important;
+}
+
+/* Content views fade in */
+.view.active {
+    animation: viewEnter .35s ease forwards;
+}
+@keyframes viewEnter {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Question card entrance */
+.question-card { animation: slideInUp .3s cubic-bezier(.34,1.2,.64,1); }
+
+/* Score circle pulse on results */
+.score-circle.passed {
+    animation: scorePop .6s cubic-bezier(.34,1.56,.64,1) .2s both;
+}
+@keyframes scorePop {
+    from { transform: scale(0.5); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+}
+
+/* Hero stats count-up feel */
+.hero-stat { transition: transform .2s; }
+.hero-stat:hover { transform: translateY(-3px); }
+
+/* Sidebar module items */
+.sidebar-module-item {
+    transition: background .15s, padding-left .15s;
+}
+.sidebar-lesson-item {
+    transition: background .15s, color .15s;
+}
+
+/* Loading bar animation */
+.loading-bar-fill {
+    animation: loadBar 1.6s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes loadBar { from { width: 0%; } to { width: 100%; } }
+
+/* Pulse on complete button */
+.lesson-footer-nav .btn-primary {
+    animation: subtlePulse 3s ease-in-out infinite;
+}
+@keyframes subtlePulse {
+    0%, 100% { box-shadow: 0 2px 8px rgba(79,70,229,.3); }
+    50%       { box-shadow: 0 4px 20px rgba(79,70,229,.5); }
+}
+
+/* Toast slide-up */
+.toast.show { animation: toastIn .3s cubic-bezier(.34,1.3,.64,1); }
+@keyframes toastIn {
+    from { transform: translateY(80px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Certificate canvas reveal */
+#cert-canvas-wrap { animation: fadeIn .5s ease; }
 
 /* Smooth transitions for theme switch */
 .sidebar, .main-content, .top-header, .lesson-content-box,
