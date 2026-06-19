@@ -1562,3 +1562,177 @@ canvas#certificate-canvas {
     .worksheet-section { padding: 20px 16px; }
     .worksheet-actions { flex-direction: column; }
 }
+
+
+/* ══════════════════════════════════════════════════
+   LEARNING OUTCOMES
+══════════════════════════════════════════════════ */
+.learning-outcomes {
+    margin-top: 16px;
+    background: var(--primary-bg);
+    border: 1.5px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+}
+.lo-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .85rem; font-weight: 700; color: var(--primary);
+    text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px;
+}
+.lo-intro { font-size: .88rem; color: var(--text-secondary); margin-bottom: 10px; }
+.lo-list {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 7px;
+    counter-reset: lo-counter;
+}
+.lo-list li {
+    font-size: .88rem; color: var(--text);
+    padding-left: 28px; position: relative; line-height: 1.5;
+    counter-increment: lo-counter;
+}
+.lo-list li::before {
+    content: counter(lo-counter);
+    position: absolute; left: 0; top: 0;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--primary); color: #fff;
+    font-size: .72rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+}
+
+/* ══════════════════════════════════════════════════
+   POLICY / ABOUT PAGES
+══════════════════════════════════════════════════ */
+.policy-page {
+    max-width: 780px; margin: 0 auto;
+    padding: 40px 48px 60px;
+    color: var(--text);
+}
+.policy-page h2 {
+    font-size: 1.8rem; font-weight: 900; color: var(--primary);
+    margin-bottom: 6px;
+}
+.policy-date { color: var(--text-muted); font-size: .85rem; margin-bottom: 28px; }
+.policy-page h3 {
+    font-size: 1.05rem; font-weight: 700; color: var(--text);
+    margin: 28px 0 10px;
+}
+.policy-page p { margin-bottom: 14px; line-height: 1.7; font-size: .95rem; }
+.policy-page ul, .policy-page ol {
+    padding-left: 24px; margin-bottom: 14px;
+}
+.policy-page li { margin-bottom: 8px; font-size: .95rem; line-height: 1.6; }
+
+/* About page CPD badge */
+.about-cpd-badge {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--primary-bg); border: 2px solid var(--primary);
+    border-radius: var(--radius-lg); padding: 16px 20px;
+    margin: 20px 0 32px;
+}
+.cpd-badge-icon { font-size: 32px; }
+.cpd-badge-title { font-weight: 800; font-size: 1rem; color: var(--primary); }
+.cpd-badge-sub { font-size: .85rem; color: var(--text-secondary); margin-top: 2px; }
+
+/* About table */
+.about-table {
+    width: 100%; border-collapse: collapse;
+    margin: 12px 0 24px; font-size: .9rem;
+}
+.about-table td {
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    vertical-align: top;
+}
+.about-table td:first-child {
+    width: 40%; color: var(--text-secondary); font-weight: 500;
+}
+.about-table tr:last-child td { border-bottom: none; }
+
+/* Sidebar info links */
+.nav-info-btn { opacity: .75; font-size: .8rem !important; }
+.nav-info-btn:hover { opacity: 1; }
+
+/* ══════════════════════════════════════════════════
+   FEEDBACK FORM
+══════════════════════════════════════════════════ */
+.feedback-page {
+    max-width: 720px; margin: 0 auto; padding: 40px 48px 60px;
+}
+.feedback-header { margin-bottom: 32px; }
+.feedback-title { font-size: 1.6rem; font-weight: 900; color: var(--primary); margin-bottom: 10px; }
+.feedback-desc { color: var(--text-secondary); font-size: .95rem; line-height: 1.6; }
+.feedback-form { display: flex; flex-direction: column; gap: 24px; }
+.feedback-q { display: flex; flex-direction: column; gap: 10px; }
+.feedback-q > label { font-weight: 600; font-size: .92rem; color: var(--text); }
+.feedback-submit-btn { align-self: flex-start; }
+
+/* Star rating */
+.star-rating { display: flex; flex-direction: row-reverse; gap: 4px; }
+.star-label input { display: none; }
+.star-label span {
+    font-size: 28px; cursor: pointer; color: var(--border);
+    transition: color .15s;
+}
+.star-label:hover span,
+.star-label:hover ~ .star-label span,
+.star-label input:checked ~ * span { color: var(--warning); }
+.star-rating:has(.star-label input:checked) .star-label input:checked ~ .star-label span { color: var(--warning); }
+.star-label input:checked + span { color: var(--warning); }
+
+/* Scale options */
+.feedback-scale {
+    display: flex; flex-direction: column; gap: 6px;
+}
+.scale-opt { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.scale-opt input { accent-color: var(--primary); width: 16px; height: 16px; }
+.scale-opt span { font-size: .9rem; color: var(--text); }
+.feedback-scale-row {
+    flex-direction: row; flex-wrap: wrap; gap: 8px;
+}
+.scale-num {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 4px; cursor: pointer;
+}
+.scale-num input { accent-color: var(--primary); }
+.scale-num span {
+    width: 36px; height: 36px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); display: flex; align-items: center;
+    justify-content: center; font-weight: 700; font-size: .9rem;
+    color: var(--text); transition: all .15s;
+}
+.scale-num:hover span, .scale-num input:checked + span {
+    background: var(--primary); border-color: var(--primary); color: #fff;
+}
+.scale-endpoints {
+    display: flex; justify-content: space-between;
+    font-size: .75rem; color: var(--text-muted); margin-top: 4px;
+}
+
+/* Feedback thank you */
+.feedback-thankyou {
+    text-align: center; padding: 80px 40px;
+}
+.feedback-ty-icon { font-size: 56px; margin-bottom: 20px; }
+.feedback-thankyou h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 12px; color: var(--text); }
+.feedback-thankyou p { color: var(--text-secondary); margin-bottom: 28px; }
+
+/* ══════════════════════════════════════════════════
+   NEEDS ASSESSMENT MODAL
+══════════════════════════════════════════════════ */
+.needs-modal-box { max-width: 520px; }
+.needs-modal-header { padding: 0 24px; text-align: center; margin-bottom: 8px; }
+.needs-modal-header h2 { font-size: 1.05rem; font-weight: 800; margin: 10px 0 6px; }
+.needs-form { padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 20px; }
+.needs-q { display: flex; flex-direction: column; gap: 8px; }
+.needs-label { font-weight: 600; font-size: .88rem; color: var(--text); }
+.needs-options { display: flex; flex-direction: column; gap: 6px; }
+.needs-opt { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.needs-opt input { accent-color: var(--primary); width: 15px; height: 15px; flex-shrink: 0; }
+.needs-opt span { font-size: .88rem; color: var(--text); }
+.needs-submit-btn { margin-top: 4px; }
+
+@media (max-width: 768px) {
+    .policy-page { padding: 24px 16px 40px; }
+    .feedback-page { padding: 24px 16px 40px; }
+    .about-cpd-badge { flex-direction: column; text-align: center; }
+}
