@@ -346,6 +346,9 @@ const App = (() => {
 
         const container = document.getElementById('view-module');
         const modDone   = mod.lessons.filter(l => Store.isLessonComplete(l.id)).length;
+        const worksheet = MODULE_WORKSHEETS[mod.id];
+        const wsHtml    = worksheet ? _renderWorksheet(mod.id, worksheet) : '';
+
         container.innerHTML = `
 <div class="module-overview">
   <div class="module-ov-header">
@@ -378,6 +381,7 @@ const App = (() => {
 </div>`;
     }).join('')}
   </div>
+  ${wsHtml}
 </div>`;
     }
 
@@ -575,6 +579,13 @@ const App = (() => {
   <span>🏆</span><span>Download Certificate</span>
 </div>`;
         }
+
+        // Prompt library & worksheets
+        nav.innerHTML += `
+<div class="nav-divider"></div>
+<div class="nav-assessment-btn nav-resource-btn" onclick="App.showPromptLibrary()" role="button">
+  <span>💬</span><span>Prompt Library</span>
+</div>`;
     }
 
     function _toggleSidebarModule(modId) {
@@ -705,9 +716,176 @@ const App = (() => {
         _lessonTimer   = setInterval(() => { _lessonSeconds++; }, 1000);
     }
 
+    // ── Worksheet ─────────────────────────────────────────────
+    function _renderWorksheet(modId, ws) {
+        const saved = JSON.parse(Store.get('worksheet_' + modId) || '{}');
+        return `
+<div class="worksheet-section" id="worksheet-mod-${modId}">
+  <div class="worksheet-header">
+    <div class="worksheet-icon">📋</div>
+    <div>
+      <h2 class="worksheet-title">${ws.title}</h2>
+      <p class="worksheet-subtitle">${ws.subtitle}</p>
+    </div>
+  </div>
+  <div class="worksheet-questions">
+    ${ws.questions.map(q => `
+    <div class="worksheet-q">
+      <label class="worksheet-label">${q.label}</label>
+      <textarea class="worksheet-textarea" id="ws-${modId}-${q.id}"
+        placeholder="${q.placeholder}"
+        oninput="App._saveWorksheet(${modId})">${_esc(saved[q.id] || '')}</textarea>
+    </div>`).join('')}
+  </div>
+  <div class="worksheet-actions">
+    <button class="btn-primary ws-save-btn" onclick="App._saveWorksheet(${modId}, true)">
+      💾 Save Answers
+    </button>
+    <button class="btn-outline ws-print-btn" onclick="App._printWorksheet(${modId})">
+      🖨 Print Worksheet
+    </button>
+  </div>
+</div>`;
+    }
+
+    function _saveWorksheet(modId, notify) {
+        const ws = MODULE_WORKSHEETS[modId];
+        if (!ws) return;
+        const data = {};
+        ws.questions.forEach(q => {
+            const el = document.getElementById(`ws-${modId}-${q.id}`);
+            if (el) data[q.id] = el.value;
+        });
+        Store.set('worksheet_' + modId, JSON.stringify(data));
+        if (notify) toast('Worksheet saved!', 'success');
+    }
+
+    function _printWorksheet(modId) {
+        const ws  = MODULE_WORKSHEETS[modId];
+        if (!ws) return;
+        const saved = JSON.parse(Store.get('worksheet_' + modId) || '{}');
+        const rows  = ws.questions.map(q => `
+          <div style="margin-bottom:24px">
+            <p style="font-weight:700;margin-bottom:8px;color:#0A1E2D">${q.label}</p>
+            <div style="border:1px solid #C8DDE6;border-radius:8px;padding:12px;min-height:80px;font-size:14px;color:#1B6B8A;white-space:pre-wrap">${_esc(saved[q.id] || '')}</div>
+          </div>`).join('');
+        const win = window.open('', '_blank');
+        win.document.write(`<!DOCTYPE html><html><head><title>${ws.title}</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,Segoe UI,Arial,sans-serif;padding:40px;max-width:800px;margin:0 auto;color:#0A1E2D}
+h1{font-size:22px;margin-bottom:6px;color:#1B6B8A}p.sub{color:#7BA3B5;margin-bottom:32px;font-size:14px}
+@media print{body{padding:20px}}</style></head>
+<body><h1>${ws.title}</h1><p class="sub">${ws.subtitle} — Penshaw View Training</p>${rows}
+<p style="margin-top:32px;font-size:11px;color:#7BA3B5">AI For Business Growth Masterclass · Penshaw View Training</p>
+<script>setTimeout(()=>{window.print();window.close()},400)<\/script></body></html>`);
+        win.document.close();
+    }
+
+    function _esc(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ── Prompt Library ────────────────────────────────────────
+    function showPromptLibrary() {
+        _showView('prompts');
+        _setBreadcrumb('Prompt Library');
+        Voice.stop();
+
+        const container = document.getElementById('view-prompts');
+        if (!container) return;
+
+        container.innerHTML = `
+<div class="prompts-page">
+  <div class="prompts-hero">
+    <h1 class="prompts-hero-title">💬 Business AI Prompt Library</h1>
+    <p class="prompts-hero-desc">70+ ready-to-use prompts across every business function. Click any prompt to copy it, then paste straight into ChatGPT, Claude, or Gemini. Replace the <span class="prompt-placeholder-badge">[BRACKETS]</span> with your own details.</p>
+    <div class="prompts-search-wrap">
+      <input type="text" class="prompts-search" id="prompt-search" placeholder="Search prompts..." oninput="App._filterPrompts(this.value)">
+    </div>
+  </div>
+  <div class="prompts-categories" id="prompts-categories">
+    ${PROMPT_LIBRARY.map((cat, ci) => `
+    <div class="prompt-cat-section" data-category="${ci}">
+      <div class="prompt-cat-header">
+        <span class="prompt-cat-icon">${cat.icon}</span>
+        <h2 class="prompt-cat-title">${cat.category}</h2>
+        <span class="prompt-cat-count">${cat.prompts.length} prompts</span>
+      </div>
+      <div class="prompt-cards-grid">
+        ${cat.prompts.map((p, pi) => `
+        <div class="prompt-card" data-title="${_esc(p.title.toLowerCase())}" data-text="${_esc(p.prompt.toLowerCase())}">
+          <div class="prompt-card-title">${p.title}</div>
+          <div class="prompt-card-preview">${_esc(p.prompt.substring(0, 120))}...</div>
+          <button class="prompt-copy-btn" onclick="App._copyPrompt(${ci},${pi},this)" style="--cat-color:${cat.color}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Prompt
+          </button>
+        </div>`).join('')}
+      </div>
+    </div>`).join('')}
+  </div>
+  <div class="prompts-download-bar">
+    <span>Want all prompts as a document?</span>
+    <button class="btn-primary" onclick="App._downloadPrompts()">⬇ Download Full Prompt Pack</button>
+  </div>
+</div>`;
+    }
+
+    function _copyPrompt(catIdx, promptIdx, btn) {
+        const text = PROMPT_LIBRARY[catIdx].prompts[promptIdx].prompt;
+        navigator.clipboard.writeText(text).then(() => {
+            btn.innerHTML = '✓ Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Prompt`;
+                btn.classList.remove('copied');
+            }, 2000);
+        }).catch(() => {
+            // Fallback for file:// protocol
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            btn.innerHTML = '✓ Copied!'; btn.classList.add('copied');
+            setTimeout(() => {
+                btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Prompt`;
+                btn.classList.remove('copied');
+            }, 2000);
+        });
+    }
+
+    function _filterPrompts(query) {
+        const q = query.toLowerCase().trim();
+        document.querySelectorAll('.prompt-card').forEach(card => {
+            const match = !q || card.dataset.title.includes(q) || card.dataset.text.includes(q);
+            card.style.display = match ? '' : 'none';
+        });
+        document.querySelectorAll('.prompt-cat-section').forEach(section => {
+            const visible = [...section.querySelectorAll('.prompt-card')].some(c => c.style.display !== 'none');
+            section.style.display = visible ? '' : 'none';
+        });
+    }
+
+    function _downloadPrompts() {
+        let text = 'AI FOR BUSINESS GROWTH MASTERCLASS\nBusiness AI Prompt Library — Penshaw View Training\n';
+        text += '='.repeat(60) + '\n\n';
+        PROMPT_LIBRARY.forEach(cat => {
+            text += `\n${cat.icon} ${cat.category.toUpperCase()}\n${'─'.repeat(40)}\n\n`;
+            cat.prompts.forEach(p => {
+                text += `${p.title}\n${p.prompt}\n\n`;
+            });
+        });
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = 'AI-Business-Prompt-Library-PenshawView.txt';
+        a.click(); URL.revokeObjectURL(url);
+        toast('Prompt pack downloaded!', 'success');
+    }
+
     // ── View Management ───────────────────────────────────────
     function _showView(name) {
-        ['home','module','lesson','assessment','certificate'].forEach(v => {
+        ['home','module','lesson','assessment','certificate','prompts'].forEach(v => {
             const el = document.getElementById(`view-${v}`);
             if (!el) return;
             if (v === name) {
@@ -752,12 +930,12 @@ const App = (() => {
         el._timer = setTimeout(() => el.classList.remove('show'), 4000);
     }
 
-    // Expose _switchTab and _handleLogin/_handleRegister for inline onclick
     return {
         init, showHome, showModule, showLesson, startAssessment, showCertificate,
-        startPayment, toast,
+        showPromptLibrary, startPayment, toast,
         _switchTab, _handleLogin, _handleRegister, _handleForgot, _demoAccess,
         _toggleSidebarModule, _onAssessmentComplete,
+        _saveWorksheet, _printWorksheet, _copyPrompt, _filterPrompts, _downloadPrompts,
     };
 
 })();

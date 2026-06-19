@@ -1400,3 +1400,165 @@ canvas#certificate-canvas {
         color var(--transition-slow),
         box-shadow var(--transition-slow);
 }
+
+
+/* ══════════════════════════════════════════════════
+   WORKSHEETS
+══════════════════════════════════════════════════ */
+.worksheet-section {
+    margin-top: 40px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    box-shadow: var(--shadow);
+}
+.worksheet-header {
+    display: flex; align-items: flex-start; gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+.worksheet-icon {
+    font-size: 32px; flex-shrink: 0;
+    background: var(--primary-bg); width: 56px; height: 56px;
+    border-radius: var(--radius); display: flex; align-items: center; justify-content: center;
+}
+.worksheet-title {
+    font-size: 1.25rem; font-weight: 800; color: var(--primary);
+    margin-bottom: 4px;
+}
+.worksheet-subtitle { color: var(--text-secondary); font-size: .9rem; }
+.worksheet-questions { display: flex; flex-direction: column; gap: 20px; }
+.worksheet-q { display: flex; flex-direction: column; gap: 8px; }
+.worksheet-label {
+    font-weight: 600; font-size: .9rem; color: var(--text);
+    line-height: 1.4;
+}
+.worksheet-textarea {
+    width: 100%; min-height: 100px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--font); font-size: .9rem;
+    color: var(--text); background: var(--bg);
+    resize: vertical; line-height: 1.6;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.worksheet-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(27,107,138,.12);
+}
+.worksheet-textarea::placeholder { color: var(--text-muted); }
+.worksheet-actions {
+    display: flex; gap: 12px; margin-top: 24px;
+    padding-top: 20px; border-top: 1px solid var(--border);
+}
+.ws-save-btn, .ws-print-btn { font-size: .875rem; }
+
+/* ══════════════════════════════════════════════════
+   PROMPT LIBRARY
+══════════════════════════════════════════════════ */
+.prompts-page { padding: 0 0 60px; }
+.prompts-hero {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--accent) 100%);
+    padding: 48px 48px 40px;
+    color: #fff;
+}
+.prompts-hero-title { font-size: 1.9rem; font-weight: 900; margin-bottom: 12px; }
+.prompts-hero-desc { font-size: 1rem; opacity: .9; max-width: 680px; line-height: 1.6; margin-bottom: 24px; }
+.prompt-placeholder-badge {
+    background: rgba(255,255,255,0.2); border-radius: 4px;
+    padding: 1px 6px; font-family: var(--font-mono); font-size: .85em;
+}
+.prompts-search-wrap { max-width: 400px; }
+.prompts-search {
+    width: 100%; padding: 12px 16px;
+    border: none; border-radius: var(--radius);
+    font-size: .95rem; font-family: var(--font);
+    background: rgba(255,255,255,0.15);
+    color: #fff; backdrop-filter: blur(4px);
+}
+.prompts-search::placeholder { color: rgba(255,255,255,0.6); }
+.prompts-search:focus { outline: none; background: rgba(255,255,255,0.25); }
+
+.prompts-categories { padding: 32px 48px; display: flex; flex-direction: column; gap: 40px; }
+.prompt-cat-section {}
+.prompt-cat-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+}
+.prompt-cat-icon { font-size: 22px; }
+.prompt-cat-title { font-size: 1.15rem; font-weight: 800; color: var(--text); flex: 1; }
+.prompt-cat-count {
+    font-size: .78rem; font-weight: 600;
+    background: var(--primary-bg); color: var(--primary);
+    padding: 3px 10px; border-radius: 99px;
+}
+.prompt-cards-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+}
+.prompt-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+.prompt-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    border-color: var(--primary);
+}
+.prompt-card-title { font-weight: 700; font-size: .95rem; color: var(--text); }
+.prompt-card-preview {
+    font-size: .82rem; color: var(--text-secondary);
+    line-height: 1.5; flex: 1;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.prompt-copy-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--cat-color, var(--primary));
+    background: transparent; color: var(--cat-color, var(--primary));
+    font-size: .8rem; font-weight: 600; cursor: pointer;
+    transition: all var(--transition);
+    align-self: flex-start;
+    font-family: var(--font);
+}
+.prompt-copy-btn:hover {
+    background: var(--cat-color, var(--primary));
+    color: #fff;
+}
+.prompt-copy-btn.copied {
+    background: var(--success); border-color: var(--success); color: #fff;
+}
+
+.prompts-download-bar {
+    margin: 0 48px;
+    padding: 20px 24px;
+    background: var(--primary-bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    font-weight: 600; color: var(--text-secondary);
+}
+
+/* Sidebar extras */
+.nav-divider {
+    height: 1px; background: var(--sidebar-border);
+    margin: 8px 16px;
+}
+.nav-resource-btn { background: rgba(0,212,232,.08) !important; }
+.nav-resource-btn:hover { background: rgba(0,212,232,.15) !important; }
+
+@media (max-width: 768px) {
+    .prompts-hero { padding: 32px 20px 28px; }
+    .prompts-categories { padding: 24px 16px; }
+    .prompts-download-bar { margin: 0 16px; flex-direction: column; align-items: flex-start; }
+    .worksheet-section { padding: 20px 16px; }
+    .worksheet-actions { flex-direction: column; }
+}
