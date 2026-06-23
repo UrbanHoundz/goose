@@ -13,6 +13,7 @@ const MODULES = [
   title: 'Introduction to AI in Business',
   description: 'Discover what AI really is, bust the myths holding businesses back, and explore the enormous opportunities AI creates right now.',
   estimatedTime: '30 min',
+  videoUrl: '', // Paste your Synthesia share URL here e.g. 'https://share.synthesia.io/YOUR-ID'
   lessons: [
     {
       id: '1.1', title: 'What is Artificial Intelligence?', duration: '6 min',
@@ -125,6 +126,7 @@ const MODULES = [
   title: 'Using ChatGPT Effectively',
   description: 'Master the skill of prompt engineering and unlock ChatGPT\'s full potential for sales, marketing, customer service, and daily operations.',
   estimatedTime: '47 min',
+  videoUrl: '', // Paste your Synthesia share URL here
   lessons: [
     {
       id: '2.1', title: 'Understanding ChatGPT', duration: '5 min',
@@ -277,6 +279,7 @@ const MODULES = [
   title: 'AI Marketing',
   description: 'Transform your marketing output. Create months of content in days, produce scroll-stopping ads, and build automated email campaigns that convert.',
   estimatedTime: '39 min',
+  videoUrl: '', // Paste your Synthesia share URL here
   lessons: [
     {
       id: '3.1', title: 'Social Media Content at Scale', duration: '7 min',
@@ -425,6 +428,7 @@ const MODULES = [
   title: 'Lead Generation with AI',
   description: 'Find better prospects faster, personalise outreach at scale, and build automated follow-up systems that turn cold contacts into paying customers.',
   estimatedTime: '36 min',
+  videoUrl: '', // Paste your Synthesia share URL here
   lessons: [
     {
       id: '4.1', title: 'AI-Powered Prospect Research', duration: '7 min',
@@ -532,6 +536,7 @@ const MODULES = [
   title: 'Business Automation',
   description: 'Eliminate repetitive tasks forever. Build intelligent workflows that handle email, customer support, reporting, and operations automatically.',
   estimatedTime: '35 min',
+  videoUrl: '', // Paste your Synthesia share URL here
   lessons: [
     {
       id: '5.1', title: 'Email & Communication Automation', duration: '7 min',
@@ -638,6 +643,7 @@ const MODULES = [
   title: 'AI Tools Every Business Should Know',
   description: 'A practical guide to the 8 most powerful AI tools for business — what they do, when to use them, and how to get started today.',
   estimatedTime: '37 min',
+  videoUrl: '', // Paste your Synthesia share URL here
   lessons: [
     {
       id: '6.1', title: 'ChatGPT — Your AI Business Partner', duration: '5 min',
@@ -858,6 +864,7 @@ Example: Professional woman working on laptop in a bright modern coffee shop, wa
   title: 'Building Your AI Strategy',
   description: 'Create a practical, low-cost AI implementation plan for your business. From your first tool to a fully AI-augmented operation — step by step.',
   estimatedTime: '34 min',
+  videoUrl: '', // Paste your Synthesia share URL here
   lessons: [
     {
       id: '7.1', title: 'Starting Your AI Journey', duration: '7 min',

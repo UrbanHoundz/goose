@@ -384,6 +384,7 @@ const App = (() => {
         const worksheet  = MODULE_WORKSHEETS[mod.id];
         const wsHtml     = worksheet ? _renderWorksheet(mod.id, worksheet) : '';
         const enrolled   = _isEnrolled();
+        const videoHtml  = mod.videoUrl ? _renderModuleVideo(mod) : '';
 
         container.innerHTML = `
 <div class="module-overview">
@@ -401,6 +402,7 @@ const App = (() => {
       ${_renderLearningOutcomes(mod.id)}
     </div>
   </div>
+  ${videoHtml}
   <div class="module-resources-bar">
     <button class="btn-outline resource-btn" onclick="App._downloadCheatSheet(${mod.id})">
       📄 Download Module Cheat Sheet
@@ -1019,6 +1021,28 @@ h1{font-size:22px;margin-bottom:6px;color:#1B6B8A}p.sub{color:#7BA3B5;margin-bot
         Store.set('needs_assessment_data', JSON.stringify(data));
         const m = document.getElementById('needs-modal');
         if (m) { m.classList.remove('visible'); setTimeout(() => m.remove(), 300); }
+    }
+
+    // ── Module Intro Video ────────────────────────────────
+    function _renderModuleVideo(mod) {
+        return `
+<div class="module-video-section">
+  <div class="module-video-label">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    Module Introduction Video
+  </div>
+  <div class="module-video-wrap">
+    <iframe
+      src="${mod.videoUrl}"
+      title="Module ${mod.id} Introduction — ${_esc(mod.title)}"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+      loading="lazy"
+      class="module-video-iframe">
+    </iframe>
+  </div>
+</div>`;
     }
 
     // ── Cheat Sheet Download ──────────────────────────────
