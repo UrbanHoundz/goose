@@ -35,7 +35,13 @@ const MODULES = [
   <li>Bank fraud detection</li>
   <li>Siri, Alexa, and Google Assistant</li>
 </ul>
-<div class="info-box success"><div class="info-box-title">✅ Key Takeaway</div><p>AI is not magic, and it is not science fiction. It is practical software — and the latest generation is so capable and accessible that any business owner can use it today, for free or at very low cost.</p></div>`
+<div class="info-box success"><div class="info-box-title">✅ Key Takeaway</div><p>AI is not magic, and it is not science fiction. It is practical software — and the latest generation is so capable and accessible that any business owner can use it today, for free or at very low cost.</p></div>
+<div class="quick-win-box">
+  <div class="quick-win-header"><span class="quick-win-icon">⚡</span><span class="quick-win-title">Quick Win — Try This Right Now (2 Minutes)</span></div>
+  <p>Open ChatGPT or Claude in a new tab and type this prompt:</p>
+  <div class="prompt-example">"I run a [type of business] in [location]. Give me 5 specific ways I could use AI in my business this week to save time or make more money. Keep it practical — no jargon."</div>
+  <p class="quick-win-note">Replace the brackets with your own details. You'll have a personalised AI action list in under 30 seconds. That is the power of this technology — and you haven't even finished the first lesson yet.</p>
+</div>`
     },
     {
       id: '1.2', title: 'What AI Is NOT', duration: '5 min',

@@ -25,9 +25,15 @@ const Cert = (() => {
   </div>
   <div id="cert-canvas-wrap" style="display:none;text-align:center">
     <div class="cert-actions">
-      <button class="btn-primary" onclick="Cert.download()">⬇ Download PNG</button>
-      <button class="btn-secondary" onclick="Cert.print()">🖨 Print Certificate</button>
+      <button class="btn-primary" onclick="Cert.download()">⬇ Download Certificate</button>
+      <button class="btn-secondary" onclick="Cert.print()">🖨 Print</button>
+      <button class="btn-linkedin" onclick="App._shareOnLinkedIn()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        Share on LinkedIn
+      </button>
+      <button class="btn-outline" onclick="App._downloadActionPlan()">📋 My Action Plan</button>
     </div>
+    <div class="cert-share-hint">Share your achievement on LinkedIn to let clients and colleagues know you're AI-qualified.</div>
     <canvas id="certificate-canvas"></canvas>
   </div>
 </div>`;

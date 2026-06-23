@@ -191,6 +191,10 @@ const App = (() => {
         if (m) { m.classList.remove('visible'); setTimeout(() => m.remove(), 300); }
     }
 
+    // ── Helpers ───────────────────────────────────────────────
+    function _isEnrolled() { return Store.get('enrolled') === 'true'; }
+    function _isPreviewLesson(lessonId) { return lessonId === '1.1'; }
+
     // ── Payment Wall ──────────────────────────────────────────
     function _showPaymentWall() {
         _showView('home');
@@ -208,14 +212,19 @@ const App = (() => {
 <div class="payment-banner-inner">
   <div class="payment-banner-text">
     <div class="payment-banner-title">🔒 One-Time Enrolment Required</div>
-    <div class="payment-banner-sub">Get full lifetime access to all 8 modules, 100+ quiz questions, and your certificate for a single payment of <strong>${CONFIG.COURSE_PRICE_LABEL}</strong>.</div>
+    <div class="payment-banner-sub">Get full lifetime access to all 8 modules, 100+ quiz questions, and your certificate for a single payment of <strong><span id="enrol-price-label">${CONFIG.COURSE_PRICE_LABEL}</span></strong>. <em>First lesson free to preview.</em></div>
   </div>
   <div class="payment-banner-actions">
-    <button class="btn-primary" onclick="App.startPayment()">
-      💳 Enrol Now — ${CONFIG.COURSE_PRICE_LABEL}
+    <button class="btn-primary" id="enrol-btn" onclick="App.startPayment()">
+      💳 Enrol Now — <span class="enrol-btn-price">${CONFIG.COURSE_PRICE_LABEL}</span>
     </button>
     <button class="btn-outline-dark" onclick="App._demoAccess()">Demo Access (No Payment)</button>
   </div>
+  <div class="promo-code-wrap">
+    <input type="text" id="promo-code-input" class="promo-input" placeholder="Have a promo code?" maxlength="20">
+    <button class="btn-promo" onclick="App._applyPromo()">Apply</button>
+  </div>
+  <div id="promo-status" class="promo-status"></div>
 </div>`;
 
         // Prepend to home view
@@ -224,13 +233,35 @@ const App = (() => {
     }
 
     async function startPayment() {
-        const btn = document.querySelector('[onclick="App.startPayment()"]');
+        const btn = document.getElementById('enrol-btn');
         if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to payment…'; }
+        const discountPct = parseInt(Store.get('promo_pct') || '0', 10);
         try {
-            await Payment.startCheckout();
+            await Payment.startCheckout(discountPct);
         } catch (ex) {
             toast('Payment unavailable: ' + (ex.message || 'Please try again.'), 'error');
-            if (btn) { btn.disabled = false; btn.textContent = `💳 Enrol Now — ${CONFIG.COURSE_PRICE_LABEL}`; }
+            if (btn) { btn.disabled = false; btn.innerHTML = '💳 Enrol Now — <span class="enrol-btn-price">' + (Store.get('promo_price_label') || CONFIG.COURSE_PRICE_LABEL) + '</span>'; }
+        }
+    }
+
+    function _applyPromo() {
+        const code = (document.getElementById('promo-code-input')?.value || '').trim();
+        if (!code) return;
+        const pct = Payment.applyDiscount(code);
+        const statusEl = document.getElementById('promo-status');
+        if (pct > 0) {
+            const newPence = Math.round(CONFIG.COURSE_PRICE_PENCE * (1 - pct / 100));
+            const newLabel = '£' + Math.round(newPence / 100);
+            Store.set('promo_code', code);
+            Store.set('promo_pct', String(pct));
+            Store.set('promo_price_label', newLabel);
+            if (statusEl) statusEl.innerHTML = '<span class="promo-success">✓ ' + pct + '% discount applied — new price: ' + newLabel + '</span>';
+            const btn = document.getElementById('enrol-btn');
+            if (btn) btn.innerHTML = '💳 Enrol Now — <span class="enrol-btn-price">' + newLabel + '</span>';
+            const lbl = document.getElementById('enrol-price-label');
+            if (lbl) lbl.textContent = newLabel;
+        } else {
+            if (statusEl) statusEl.innerHTML = '<span class="promo-error">Code not recognised. Please check and try again.</span>';
         }
     }
 
@@ -258,13 +289,16 @@ const App = (() => {
             const modTotal  = mod.lessons.length;
             const modPct    = modTotal ? Math.round(modDone / modTotal * 100) : 0;
             const completed = modPct === 100;
+            const clickable  = interactive || mod.id === 1;
             return `
-<div class="module-card ${completed ? 'completed' : ''}"
+<div class="module-card ${completed ? 'completed' : ''} ${!interactive && mod.id !== 1 ? 'locked' : ''}"
      style="--module-color:${mod.color}"
-     onclick="${interactive ? `App.showModule(${mod.id})` : ''}"
+     onclick="${clickable ? `App.showModule(${mod.id})` : ''}"
      role="button" tabindex="0"
-     onkeydown="if(event.key==='Enter'||event.key===' ')App.showModule(${mod.id})">
+     onkeydown="if(event.key==='Enter'||event.key===' ')${clickable ? `App.showModule(${mod.id})` : ''}">
+  ${!interactive && mod.id !== 1 ? '<div class="module-locked-badge">🔒 Locked</div>' : ''}
   ${completed ? '<div class="module-completed-badge">✓ Done</div>' : ''}
+  ${!interactive && mod.id === 1 ? '<div class="module-preview-badge">🎬 Free Preview</div>' : ''}
   <div class="module-card-header">
     <div class="module-card-icon" style="background:${mod.color}20">${mod.icon}</div>
     <div class="module-card-meta">
@@ -345,10 +379,11 @@ const App = (() => {
         _setBreadcrumb(`Module ${mod.id}: ${mod.title}`);
         _openSidebarModule(moduleId);
 
-        const container = document.getElementById('view-module');
-        const modDone   = mod.lessons.filter(l => Store.isLessonComplete(l.id)).length;
-        const worksheet = MODULE_WORKSHEETS[mod.id];
-        const wsHtml    = worksheet ? _renderWorksheet(mod.id, worksheet) : '';
+        const container  = document.getElementById('view-module');
+        const modDone    = mod.lessons.filter(l => Store.isLessonComplete(l.id)).length;
+        const worksheet  = MODULE_WORKSHEETS[mod.id];
+        const wsHtml     = worksheet ? _renderWorksheet(mod.id, worksheet) : '';
+        const enrolled   = _isEnrolled();
 
         container.innerHTML = `
 <div class="module-overview">
@@ -366,20 +401,27 @@ const App = (() => {
       ${_renderLearningOutcomes(mod.id)}
     </div>
   </div>
+  <div class="module-resources-bar">
+    <button class="btn-outline resource-btn" onclick="App._downloadCheatSheet(${mod.id})">
+      📄 Download Module Cheat Sheet
+    </button>
+  </div>
   <div class="lessons-list">
     ${mod.lessons.map((lesson, idx) => {
-        const done = Store.isLessonComplete(lesson.id);
+        const done      = Store.isLessonComplete(lesson.id);
+        const isPreview = _isPreviewLesson(lesson.id);
+        const locked    = !enrolled && !isPreview;
         return `
-<div class="lesson-list-item ${done ? 'completed' : ''}"
-     onclick="App.showLesson(${mod.id},'${lesson.id}')"
+<div class="lesson-list-item ${done ? 'completed' : ''} ${locked ? 'lesson-locked' : ''}"
+     onclick="${locked ? '' : `App.showLesson(${mod.id},'${lesson.id}')`}"
      role="button" tabindex="0"
-     onkeydown="if(event.key==='Enter')App.showLesson(${mod.id},'${lesson.id}')">
+     onkeydown="if(event.key==='Enter')${locked ? '' : `App.showLesson(${mod.id},'${lesson.id}')`}">
   <div class="lesson-num">${done ? '✓' : idx + 1}</div>
   <div class="lesson-list-info">
-    <div class="lesson-list-title">${lesson.title}</div>
-    <div class="lesson-list-meta">${lesson.duration}${done ? ' · Completed' : ''}</div>
+    <div class="lesson-list-title">${lesson.title}${isPreview && !enrolled ? ' <span class="lesson-preview-tag">Free Preview</span>' : ''}</div>
+    <div class="lesson-list-meta">${lesson.duration}${done ? ' · Completed' : ''}${locked ? ' · 🔒 Enrol to unlock' : ''}</div>
   </div>
-  <div class="lesson-list-dur">${done ? '✅' : '▶'}</div>
+  <div class="lesson-list-dur">${done ? '✅' : locked ? '🔒' : '▶'}</div>
 </div>`;
     }).join('')}
   </div>
@@ -393,6 +435,13 @@ const App = (() => {
         if (!mod) return;
         const lesson = mod.lessons.find(l => l.id === lessonId);
         if (!lesson) return;
+
+        // Gate: non-enrolled users may only view the free preview lesson
+        if (!_isEnrolled() && !_isPreviewLesson(lessonId)) {
+            toast('Enrol to access the full course. Lesson 1.1 is free to preview.', 'error');
+            _showPaymentWall();
+            return;
+        }
 
         _currentModuleId = moduleId;
         _currentLessonId = lessonId;
@@ -516,6 +565,11 @@ const App = (() => {
 
     function _onAssessmentComplete(score, passed) {
         _updateProgress();
+        if (passed) {
+            setTimeout(() => {
+                toast('Assessment passed! Download your personalised AI Action Plan below.', 'success');
+            }, 1500);
+        }
     }
 
     // ── Certificate ───────────────────────────────────────────
@@ -590,6 +644,9 @@ const App = (() => {
 </div>
 <div class="nav-assessment-btn nav-resource-btn" onclick="App.showFeedback()" role="button">
   <span>⭐</span><span>Leave Feedback</span>
+</div>
+<div class="nav-assessment-btn nav-resource-btn" onclick="App.showTeamPricing()" role="button">
+  <span>👥</span><span>Team & Corporate</span>
 </div>
 <div class="nav-divider"></div>
 <div class="nav-assessment-btn nav-info-btn" onclick="App.showAbout()" role="button">
@@ -964,6 +1021,143 @@ h1{font-size:22px;margin-bottom:6px;color:#1B6B8A}p.sub{color:#7BA3B5;margin-bot
         if (m) { m.classList.remove('visible'); setTimeout(() => m.remove(), 300); }
     }
 
+    // ── Cheat Sheet Download ──────────────────────────────
+    function _downloadCheatSheet(modId) {
+        const mod = MODULES.find(m => m.id === modId);
+        if (!mod) return;
+        let text = mod.title.toUpperCase() + ' — QUICK REFERENCE CHEAT SHEET\n';
+        text += 'AI For Business Growth Masterclass — Penshaw View Training\n';
+        text += '='.repeat(60) + '\n\n';
+        mod.lessons.forEach(lesson => {
+            text += lesson.title + '\n' + '─'.repeat(40) + '\n';
+            lesson.keyPoints.forEach(p => { text += '• ' + p + '\n'; });
+            text += '\n';
+        });
+        const lo = (typeof MODULE_LEARNING_OUTCOMES !== 'undefined') && MODULE_LEARNING_OUTCOMES[modId];
+        if (lo) {
+            text += 'LEARNING OUTCOMES\n' + '─'.repeat(40) + '\n';
+            lo.outcomes.forEach(o => { text += '• ' + o + '\n'; });
+        }
+        text += '\n' + '─'.repeat(60) + '\nPenshaw View Training | training@penshawview.co.uk\n';
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = 'Module-' + modId + '-Cheat-Sheet-AI-Masterclass.txt';
+        a.click(); URL.revokeObjectURL(url);
+        toast('Cheat sheet downloaded!', 'success');
+    }
+
+    // ── AI Action Plan Download ───────────────────────────
+    function _downloadActionPlan() {
+        let text = 'MY AI BUSINESS ACTION PLAN\n';
+        text += 'AI For Business Growth Masterclass — Penshaw View Training\n';
+        text += 'Generated: ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '\n';
+        text += '='.repeat(60) + '\n\n';
+        const result = Store.getAssessmentResult();
+        if (result) text += 'Assessment Score: ' + result.score + '%' + (result.passed ? ' — PASSED' : '') + '\n\n';
+        MODULES.forEach(mod => {
+            const ws = (typeof MODULE_WORKSHEETS !== 'undefined') && MODULE_WORKSHEETS[mod.id];
+            if (!ws) return;
+            const saved = JSON.parse(Store.get('worksheet_' + mod.id) || '{}');
+            text += 'MODULE ' + mod.id + ': ' + mod.title.toUpperCase() + '\n';
+            text += '─'.repeat(40) + '\n';
+            ws.questions.forEach(q => {
+                text += '\n' + q.label + '\n';
+                text += (saved[q.id] || '[Not completed]') + '\n';
+            });
+            text += '\n';
+        });
+        text += '='.repeat(60) + '\nPenshaw View Training | training@penshawview.co.uk\n';
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = 'My-AI-Business-Action-Plan-PenshawView.txt';
+        a.click(); URL.revokeObjectURL(url);
+        toast('Action plan downloaded!', 'success');
+    }
+
+    // ── LinkedIn Share ────────────────────────────────────
+    function _shareOnLinkedIn() {
+        const name    = (document.getElementById('cert-name-field')?.value || '').trim();
+        const url     = encodeURIComponent(CONFIG.COURSE_URL || window.location.href);
+        const title   = encodeURIComponent('AI For Business Growth Masterclass Certificate');
+        const summary = encodeURIComponent(
+            'I have just completed the AI For Business Growth Masterclass by Penshaw View Training, ' +
+            'earning 3.5 CPD hours in AI tools, strategy, marketing, and automation for business.' +
+            (name ? ' Completed by ' + name + '.' : '')
+        );
+        window.open(
+            'https://www.linkedin.com/shareArticle?mini=true&url=' + url + '&title=' + title + '&summary=' + summary,
+            '_blank', 'width=600,height=600,noopener'
+        );
+    }
+
+    // ── Team / Corporate Pricing ──────────────────────────
+    function showTeamPricing() {
+        _showView('team-pricing');
+        _setBreadcrumb('Team & Corporate Pricing');
+        Voice.stop();
+        const container = document.getElementById('view-team-pricing');
+        if (!container) return;
+        container.innerHTML = `
+<div class="team-pricing-page">
+  <div class="team-pricing-hero">
+    <h1 class="team-pricing-title">Team & Corporate Pricing</h1>
+    <p class="team-pricing-desc">Training your team in AI is one of the highest-ROI investments you can make. We offer discounted group licensing for businesses buying 3 or more seats, with full progress tracking and centralised reporting.</p>
+  </div>
+  <div class="team-tiers-grid">
+    <div class="team-tier">
+      <div class="team-tier-name">Individual</div>
+      <div class="team-tier-price">£97 <span>per person</span></div>
+      <ul class="team-tier-features">
+        <li>✓ Full course access</li>
+        <li>✓ CPD certificate</li>
+        <li>✓ Prompt library & worksheets</li>
+        <li>✓ Lifetime access</li>
+      </ul>
+      <button class="btn-primary" onclick="App.startPayment()">Enrol Now</button>
+    </div>
+    <div class="team-tier featured">
+      <div class="team-tier-badge">Most Popular</div>
+      <div class="team-tier-name">Team (5–20 seats)</div>
+      <div class="team-tier-price">£67 <span>per person</span></div>
+      <ul class="team-tier-features">
+        <li>✓ Everything in Individual</li>
+        <li>✓ 30% group discount</li>
+        <li>✓ Manager progress dashboard</li>
+        <li>✓ Team completion report</li>
+        <li>✓ Branded certificates</li>
+      </ul>
+      <a class="btn-primary" href="mailto:${CONFIG.TEAM_CONTACT_EMAIL}?subject=Team%20Licensing%20Enquiry&body=Hi%2C%20I%20am%20interested%20in%20team%20licensing%20for%20the%20AI%20For%20Business%20Growth%20Masterclass.%20Number%20of%20seats%20needed%3A">Contact Us</a>
+    </div>
+    <div class="team-tier">
+      <div class="team-tier-name">Corporate (20+ seats)</div>
+      <div class="team-tier-price">Custom <span>pricing</span></div>
+      <ul class="team-tier-features">
+        <li>✓ Everything in Team</li>
+        <li>✓ Volume discount (40%+)</li>
+        <li>✓ Custom branding option</li>
+        <li>✓ Dedicated account manager</li>
+        <li>✓ Bespoke content modules</li>
+        <li>✓ Invoice payment available</li>
+      </ul>
+      <a class="btn-primary" href="mailto:${CONFIG.TEAM_CONTACT_EMAIL}?subject=Corporate%20Licensing%20Enquiry">Get a Quote</a>
+    </div>
+  </div>
+  <div class="team-guarantee">
+    <div class="team-guarantee-icon">🛡</div>
+    <div>
+      <strong>14-Day Money-Back Guarantee</strong>
+      <p>If your team is not satisfied within 14 days of enrolment and fewer than 20% of lessons have been completed, we offer a full refund.</p>
+    </div>
+  </div>
+  <div class="team-contact-box">
+    <h3>Have a question before buying?</h3>
+    <p>Email us at <a href="mailto:${CONFIG.TEAM_CONTACT_EMAIL}">${CONFIG.TEAM_CONTACT_EMAIL}</a> and we will respond within one working day.</p>
+  </div>
+</div>`;
+    }
+
     // ── Prompt Library ────────────────────────────────────────
     function showPromptLibrary() {
         _showView('prompts');
@@ -1065,7 +1259,7 @@ h1{font-size:22px;margin-bottom:6px;color:#1B6B8A}p.sub{color:#7BA3B5;margin-bot
 
     // ── View Management ───────────────────────────────────────
     function _showView(name) {
-        ['home','module','lesson','assessment','certificate','prompts','about','policy','feedback'].forEach(v => {
+        ['home','module','lesson','assessment','certificate','prompts','about','policy','feedback','team-pricing'].forEach(v => {
             const el = document.getElementById(`view-${v}`);
             if (!el) return;
             if (v === name) {
@@ -1112,10 +1306,11 @@ h1{font-size:22px;margin-bottom:6px;color:#1B6B8A}p.sub{color:#7BA3B5;margin-bot
 
     return {
         init, showHome, showModule, showLesson, startAssessment, showCertificate,
-        showPromptLibrary, showAbout, showPolicy, showFeedback, startPayment, toast,
+        showPromptLibrary, showAbout, showPolicy, showFeedback, showTeamPricing, startPayment, toast,
         _switchTab, _handleLogin, _handleRegister, _handleForgot, _demoAccess,
-        _toggleSidebarModule, _onAssessmentComplete,
+        _toggleSidebarModule, _onAssessmentComplete, _applyPromo,
         _saveWorksheet, _printWorksheet, _copyPrompt, _filterPrompts, _downloadPrompts,
+        _downloadCheatSheet, _downloadActionPlan, _shareOnLinkedIn,
         _submitFeedback, _resetFeedback, _submitNeedsAssessment,
     };
 

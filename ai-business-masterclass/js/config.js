@@ -41,5 +41,18 @@ const CONFIG = {
 
     // ── App ───────────────────────────────────────────────
     APP_NAME:            'AI Business Masterclass',
-    SUPPORT_EMAIL:       'support@yourdomain.com',
+    SUPPORT_EMAIL:       'training@penshawview.co.uk',
+    TEAM_CONTACT_EMAIL:  'training@penshawview.co.uk',
+
+    // ── Discount Codes ────────────────────────────────────
+    // Add your own codes here (code → percentage discount)
+    DISCOUNT_CODES: {
+        'EARLYBIRD': 20,   // 20% off
+        'LINKEDIN':  15,   // 15% off
+        'TEAM10':    10,   // 10% off for corporate enquiries
+    },
+
+    // ── Course URL (for LinkedIn sharing) ────────────────
+    // Replace with your actual course URL once deployed
+    COURSE_URL: 'https://yourwebsite.com/course',
 };

@@ -11,14 +11,26 @@ const Payment = (() => {
         _stripe = Stripe(CONFIG.STRIPE_PUBLISHABLE_KEY);
     }
 
+    // Validate a discount code; returns percentage (0 = invalid)
+    function applyDiscount(code) {
+        const codes = CONFIG.DISCOUNT_CODES || {};
+        return codes[(code || '').trim().toUpperCase()] || 0;
+    }
+
     // Call Supabase Edge Function to create a Stripe Checkout Session,
     // then redirect to Stripe-hosted payment page.
-    async function startCheckout() {
+    async function startCheckout(discountPct = 0) {
         const user = Auth.currentUser();
         if (!user) throw new Error('You must be logged in to purchase.');
 
         const supabaseUrl = CONFIG.SUPABASE_URL;
         const anonKey    = CONFIG.SUPABASE_ANON_KEY;
+
+        // Apply discount to price
+        const basePrice  = CONFIG.COURSE_PRICE_PENCE;
+        const finalPrice = discountPct > 0
+            ? Math.round(basePrice * (1 - discountPct / 100))
+            : basePrice;
 
         // Get auth token
         let token = '';
@@ -38,7 +50,7 @@ const Payment = (() => {
                 'apikey': anonKey,
             },
             body: JSON.stringify({
-                price_pence: CONFIG.COURSE_PRICE_PENCE,
+                price_pence: finalPrice,
                 currency:    CONFIG.COURSE_CURRENCY,
                 course_name: CONFIG.COURSE_NAME,
                 success_url: window.location.href + (window.location.href.includes('?') ? '&' : '?') + 'payment=success&session_id={CHECKOUT_SESSION_ID}',
@@ -85,5 +97,5 @@ const Payment = (() => {
         Store.set('enrolled', 'true');
     }
 
-    return { init, startCheckout, handleReturn, activateDemoAccess };
+    return { init, startCheckout, handleReturn, activateDemoAccess, applyDiscount };
 })();
