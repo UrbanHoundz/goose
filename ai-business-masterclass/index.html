@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI For Business Growth Masterclass - Learn to use AI to transform your business">
+    <title>AI For Business Growth Masterclass</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+    <!-- Supabase JS (auth + database) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- Stripe.js (payment) -->
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loading-screen" class="loading-screen">
+    <div class="loading-content">
+        <div class="loading-logo">
+            <img src="img/penshaw-view-logo.svg" alt="Penshaw View Training" class="loading-logo-img" style="width:260px;filter:brightness(0) invert(1);opacity:0.95">
+        </div>
+        <h1 class="loading-title">AI For Business Growth Masterclass</h1>
+        <div class="loading-bar-track">
+            <div class="loading-bar-fill" id="loading-bar"></div>
+        </div>
+        <p class="loading-text">Preparing your learning experience...</p>
+    </div>
+</div>
+
+<!-- Main Application -->
+<div id="app" class="app-container" hidden>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="img/penshaw-view-logo.svg" alt="Penshaw View Training" class="sidebar-brand-logo">
+            <button class="sidebar-close-btn" id="sidebar-close" aria-label="Close sidebar">✕</button>
+        </div>
+
+        <div class="sidebar-progress-section">
+            <div class="progress-header">
+                <span class="progress-label">Overall Progress</span>
+                <span class="progress-pct" id="overall-pct">0%</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="overall-fill" style="width:0%"></div>
+            </div>
+            <div class="progress-meta">
+                <span id="lessons-done">0</span> / <span id="lessons-total">42</span> lessons completed
+            </div>
+        </div>
+
+        <nav class="module-nav" id="module-nav" role="navigation" aria-label="Course modules"></nav>
+
+        <div class="sidebar-footer">
+            <div class="footer-stat">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span id="time-display">0m learning time</span>
+            </div>
+            <div class="footer-controls">
+                <button class="ctrl-btn" id="theme-toggle" title="Toggle dark/light mode">
+                    <svg class="icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <svg class="icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+                <button class="ctrl-btn" id="font-decrease" title="Decrease text size" aria-label="Decrease font size">A−</button>
+                <button class="ctrl-btn" id="font-increase" title="Increase text size" aria-label="Increase font size">A+</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content">
+
+        <!-- Top Header Bar -->
+        <header class="top-header">
+            <div class="header-left">
+                <button class="menu-toggle-btn" id="menu-toggle" aria-label="Toggle navigation menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <div class="breadcrumb" id="breadcrumb">
+                    <span>Home</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="header-progress-wrap">
+                    <div class="header-progress-track">
+                        <div class="header-progress-fill" id="header-progress-fill" style="width:0%"></div>
+                    </div>
+                    <span id="header-pct">0%</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Views -->
+        <div class="content-area">
+
+            <!-- HOME VIEW -->
+            <div id="view-home" class="view active" role="main" aria-label="Course home">
+                <div class="hero-section">
+                    <div class="hero-badge">Premium Professional eLearning</div>
+                    <h1 class="hero-title">AI For Business Growth Masterclass</h1>
+                    <p class="hero-desc">Master artificial intelligence tools and strategies to supercharge your business productivity, marketing, lead generation, and revenue — no technical background required.</p>
+                    <div class="hero-stats-row">
+                        <div class="hero-stat"><span class="hero-num">8</span><span class="hero-lbl">Modules</span></div>
+                        <div class="hero-stat"><span class="hero-num">42</span><span class="hero-lbl">Lessons</span></div>
+                        <div class="hero-stat"><span class="hero-num">3h</span><span class="hero-lbl">Learning</span></div>
+                        <div class="hero-stat"><span class="hero-num">100+</span><span class="hero-lbl">Questions</span></div>
+                        <div class="hero-stat"><span class="hero-num">70%</span><span class="hero-lbl">Pass Mark</span></div>
+                    </div>
+                    <div class="hero-actions">
+                        <button class="btn-primary btn-xl" id="start-course-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            Start Course
+                        </button>
+                        <button class="btn-outline btn-xl" id="continue-course-btn" style="display:none">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            Continue Learning
+                        </button>
+                    </div>
+                    <div class="hero-trust-row">
+                        <div class="guarantee-badge">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            14-Day Money-Back Guarantee
+                        </div>
+                        <div class="cpd-home-badge">
+                            <span class="cpd-badge-dot"></span>
+                            CPD Accredited · 3.5 Hours
+                        </div>
+                        <div class="preview-available-badge">
+                            🎬 First Lesson Free Preview
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Value Stack -->
+                <div class="home-value-stack">
+                    <div class="value-stack-header">Everything Included for <span class="value-price">£97</span></div>
+                    <div class="value-items-grid">
+                        <div class="value-item"><span class="value-check">✓</span><span class="value-label">7 Learning Modules</span><span class="value-worth">£200 value</span></div>
+                        <div class="value-item"><span class="value-check">✓</span><span class="value-label">42 Lessons with AI Voice Narration</span><span class="value-worth">£150 value</span></div>
+                        <div class="value-item"><span class="value-check">✓</span><span class="value-label">105 Practice Quiz Questions</span><span class="value-worth">£80 value</span></div>
+                        <div class="value-item"><span class="value-check">✓</span><span class="value-label">70+ Business AI Prompt Library</span><span class="value-worth">£50 value</span></div>
+                        <div class="value-item"><span class="value-check">✓</span><span class="value-label">7 Interactive Action Worksheets</span><span class="value-worth">£60 value</span></div>
+                        <div class="value-item"><span class="value-check">✓</span><span class="value-label">Module Cheat Sheet Downloads</span><span class="value-worth">£40 value</span></div>
+                        <div class="value-item"><span class="value-check">✓</span><span class="value-label">CPD Certificate of Completion</span><span class="value-worth">£30 value</span></div>
+                        <div class="value-item"><span class="value-check">✓</span><span class="value-label">Personalised AI Action Plan PDF</span><span class="value-worth">£25 value</span></div>
+                        <div class="value-item"><span class="value-check">✓</span><span class="value-label">Lifetime Access · No Expiry</span><span class="value-worth">Priceless</span></div>
+                    </div>
+                    <div class="value-total-row">Total value: <span class="value-total-num">£635+</span> · Yours today for just <span class="value-final-price">£97</span></div>
+                </div>
+
+                <div class="home-modules-grid" id="home-modules-grid"></div>
+
+                <!-- Social Proof / Testimonials -->
+                <div class="home-social-proof">
+                    <h2 class="social-proof-heading">What Learners Say</h2>
+                    <div class="testimonials-grid">
+                        <div class="testimonial-card">
+                            <div class="testimonial-stars">★★★★★</div>
+                            <p class="testimonial-text">"I was completely new to AI before this course. By Module 3 I'd already saved myself half a day's work using ChatGPT for my marketing content. The prompts library alone is worth the price."</p>
+                            <div class="testimonial-author">
+                                <div class="testimonial-avatar">SJ</div>
+                                <div><div class="testimonial-name">Sarah J.</div><div class="testimonial-role">Marketing Manager, Retail</div></div>
+                            </div>
+                        </div>
+                        <div class="testimonial-card">
+                            <div class="testimonial-stars">★★★★★</div>
+                            <p class="testimonial-text">"Finally — a course that's actually practical. No fluff, no filler. I implemented 3 automations from Module 5 in the same week and cut my admin time by 6 hours. Brilliant investment."</p>
+                            <div class="testimonial-author">
+                                <div class="testimonial-avatar">MT</div>
+                                <div><div class="testimonial-name">Mark T.</div><div class="testimonial-role">Managing Director, Construction</div></div>
+                            </div>
+                        </div>
+                        <div class="testimonial-card">
+                            <div class="testimonial-stars">★★★★★</div>
+                            <p class="testimonial-text">"The AI voice narration makes it so easy to follow. I completed it over a long weekend and immediately started using the lead generation prompts with my sales team. We're seeing real results already."</p>
+                            <div class="testimonial-author">
+                                <div class="testimonial-avatar">LR</div>
+                                <div><div class="testimonial-name">Lisa R.</div><div class="testimonial-role">Business Owner, Professional Services</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="home-info-grid">
+                    <div class="info-block">
+                        <div class="info-block-icon">🎯</div>
+                        <h3>What You'll Learn</h3>
+                        <ul>
+                            <li>Use AI tools to save hours every week</li>
+                            <li>Write powerful prompts that get results</li>
+                            <li>Automate marketing and lead generation</li>
+                            <li>Reduce business costs with smart automation</li>
+                            <li>Build a complete AI strategy for your business</li>
+                            <li>Implement AI tools with zero technical skills</li>
+                        </ul>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-block-icon">👥</div>
+                        <h3>Who This Is For</h3>
+                        <ul>
+                            <li>Business owners and entrepreneurs</li>
+                            <li>Managers and directors</li>
+                            <li>Marketing professionals</li>
+                            <li>Sales teams and consultants</li>
+                            <li>Retail and service businesses</li>
+                            <li>SMEs wanting competitive advantage</li>
+                        </ul>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-block-icon">🏆</div>
+                        <h3>Your Certificate</h3>
+                        <ul>
+                            <li>Complete all 8 learning modules</li>
+                            <li>Pass final assessment (70%+ required)</li>
+                            <li>Enter your name for personalisation</li>
+                            <li>Download or print your certificate</li>
+                            <li>Share on LinkedIn and social media</li>
+                            <li>Demonstrate AI competency to clients</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE OVERVIEW VIEW -->
+            <div id="view-module" class="view" style="display:none" role="main" aria-label="Module overview"></div>
+
+            <!-- LESSON VIEW -->
+            <div id="view-lesson" class="view" style="display:none" role="main" aria-label="Lesson content">
+                <div class="lesson-header-bar">
+                    <div class="lesson-meta-top">
+                        <span class="lesson-badge" id="lesson-badge">Module 1</span>
+                        <span class="lesson-dur" id="lesson-dur">5 min</span>
+                    </div>
+                    <h1 class="lesson-heading" id="lesson-heading">Lesson Title</h1>
+                </div>
+
+                <div class="lesson-body">
+                    <div class="lesson-main-col">
+                        <div class="lesson-content-box" id="lesson-content"></div>
+
+                        <div class="voice-panel" id="voice-panel">
+                            <div class="voice-panel-header">
+                                <div class="voice-icon-ring">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                                </div>
+                                <span class="voice-panel-title">AI Voice Narration</span>
+                                <div class="voice-waveform" id="voice-waveform">
+                                    <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                                </div>
+                            </div>
+                            <div class="voice-btns">
+                                <button class="voice-action-btn voice-play-btn" id="voice-play">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                    Play
+                                </button>
+                                <button class="voice-action-btn" id="voice-pause" disabled>
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                    Pause
+                                </button>
+                                <button class="voice-action-btn" id="voice-replay">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.96"/></svg>
+                                    Replay
+                                </button>
+                                <div class="voice-speed-wrap">
+                                    <label for="voice-speed" class="sr-only">Speed</label>
+                                    <select class="voice-speed-sel" id="voice-speed">
+                                        <option value="0.8">0.8×</option>
+                                        <option value="1.0" selected>1.0×</option>
+                                        <option value="1.2">1.2×</option>
+                                        <option value="1.5">1.5×</option>
+                                        <option value="1.8">1.8×</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="voice-progress-track">
+                                <div class="voice-progress-fill" id="voice-progress"></div>
+                            </div>
+                            <div class="voice-status-text" id="voice-status">Click Play to start narration</div>
+                        </div>
+
+                        <div class="lesson-footer-nav">
+                            <button class="btn-outline" id="prev-lesson-btn">← Previous</button>
+                            <button class="btn-primary" id="complete-lesson-btn">Mark Complete ✓</button>
+                            <button class="btn-outline" id="next-lesson-btn">Next →</button>
+                        </div>
+                    </div>
+
+                    <aside class="lesson-side-col">
+                        <div class="keypoints-card">
+                            <h3 class="keypoints-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                Key Takeaways
+                            </h3>
+                            <ul class="keypoints-list" id="keypoints-list"></ul>
+                        </div>
+                        <div class="module-progress-card">
+                            <h3>Module Progress</h3>
+                            <div class="progress-track" style="margin:10px 0 6px">
+                                <div class="progress-fill" id="mod-progress-fill" style="width:0%"></div>
+                            </div>
+                            <p class="progress-meta" id="mod-progress-text"></p>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+
+            <!-- ASSESSMENT VIEW -->
+            <div id="view-assessment" class="view" style="display:none" role="main" aria-label="Final assessment"></div>
+
+            <!-- CERTIFICATE VIEW -->
+            <div id="view-certificate" class="view" style="display:none" role="main" aria-label="Certificate"></div>
+
+            <!-- PROMPT LIBRARY VIEW -->
+            <div id="view-prompts" class="view" style="display:none" role="main" aria-label="Prompt library"></div>
+
+            <!-- ABOUT / CPD VIEW -->
+            <div id="view-about" class="view" style="display:none" role="main" aria-label="About this course"></div>
+
+            <!-- POLICY VIEW (privacy, accessibility, complaints) -->
+            <div id="view-policy" class="view" style="display:none" role="main" aria-label="Policies"></div>
+
+            <!-- FEEDBACK VIEW -->
+            <div id="view-feedback" class="view" style="display:none" role="main" aria-label="Course feedback"></div>
+
+            <!-- TEAM PRICING VIEW -->
+            <div id="view-team-pricing" class="view" style="display:none" role="main" aria-label="Team and corporate pricing"></div>
+
+        </div><!-- .content-area -->
+    </main>
+</div><!-- #app -->
+
+<!-- Notification Toast -->
+<div class="toast" id="toast" role="alert" aria-live="polite"></div>
+
+<!-- Scripts (load order is critical) -->
+<script src="js/config.js"></script>
+<script src="js/store.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/payment.js"></script>
+<script src="js/data-modules.js"></script>
+<script src="js/data-questions.js"></script>
+<script src="js/data-prompts.js"></script>
+<script src="js/data-cpd.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/cert.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
